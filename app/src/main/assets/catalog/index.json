@@ -1,0 +1,776 @@
+{
+  "source_sha256": "e2087f2f6dfd70b30cd9df82cccbc56d9c12345780a5f925adbcf10fa83ff8b3",
+  "icons": [
+    {
+      "tag": "aosp",
+      "file": "icons_aosp.json",
+      "frames": 1,
+      "source": [
+        "res/S9.webp"
+      ]
+    },
+    {
+      "tag": "bluegradient",
+      "file": "icons_bluegradient.json",
+      "frames": 1,
+      "source": [
+        "res/eE.webp"
+      ]
+    },
+    {
+      "tag": "circle",
+      "file": "icons_circle.json",
+      "frames": 1,
+      "source": [
+        "res/5B.webp"
+      ]
+    },
+    {
+      "tag": "coloros",
+      "file": "icons_coloros.json",
+      "frames": 1,
+      "source": [
+        "res/xE.webp"
+      ]
+    },
+    {
+      "tag": "coloros2",
+      "file": "icons_coloros2.json",
+      "frames": 1,
+      "source": [
+        "res/7s.webp"
+      ]
+    },
+    {
+      "tag": "coloros3",
+      "file": "icons_coloros3.json",
+      "frames": 1,
+      "source": [
+        "res/-y.webp"
+      ]
+    },
+    {
+      "tag": "cookie",
+      "file": "icons_cookie.json",
+      "frames": 1,
+      "source": [
+        "res/ws.webp"
+      ]
+    },
+    {
+      "tag": "creeper",
+      "file": "icons_creeper.json",
+      "frames": 1,
+      "source": [
+        "res/Wb.webp"
+      ]
+    },
+    {
+      "tag": "huawei",
+      "file": "icons_huawei.json",
+      "frames": 1,
+      "source": [
+        "res/7R.webp"
+      ]
+    },
+    {
+      "tag": "hyper",
+      "file": "icons_hyper.json",
+      "frames": 1,
+      "source": [
+        "res/O8.webp"
+      ]
+    },
+    {
+      "tag": "miui",
+      "file": "icons_miui.json",
+      "frames": 1,
+      "source": [
+        "res/jx.webp"
+      ]
+    },
+    {
+      "tag": "nothingos",
+      "file": "icons_nothingos.json",
+      "frames": 1,
+      "source": [
+        "res/AE.webp"
+      ]
+    },
+    {
+      "tag": "originos",
+      "file": "icons_originos.json",
+      "frames": 1,
+      "source": [
+        "res/Pn.webp"
+      ]
+    },
+    {
+      "tag": "originosblue",
+      "file": "icons_originosblue.json",
+      "frames": 1,
+      "source": [
+        "res/tr.webp"
+      ]
+    },
+    {
+      "tag": "outline",
+      "file": "icons_outline.json",
+      "frames": 1,
+      "source": [
+        "res/ka.webp"
+      ]
+    },
+    {
+      "tag": "oxygenos",
+      "file": "icons_oxygenos.json",
+      "frames": 1,
+      "source": [
+        "res/4v.webp"
+      ]
+    },
+    {
+      "tag": "ring",
+      "file": "icons_ring.json",
+      "frames": 1,
+      "source": [
+        "res/CU.webp"
+      ]
+    },
+    {
+      "tag": "rubin",
+      "file": "icons_rubin.json",
+      "frames": 1,
+      "source": [
+        "res/IQ.webp"
+      ]
+    },
+    {
+      "tag": "spiral",
+      "file": "icons_spiral.json",
+      "frames": 1,
+      "source": [
+        "res/wK.webp"
+      ]
+    },
+    {
+      "tag": "star",
+      "file": "icons_star.json",
+      "frames": 1,
+      "source": [
+        "res/Hw.webp"
+      ]
+    },
+    {
+      "tag": "starblue",
+      "file": "icons_starblue.json",
+      "frames": 1,
+      "source": [
+        "res/VX.webp"
+      ]
+    },
+    {
+      "tag": "stipple",
+      "file": "icons_stipple.json",
+      "frames": 1,
+      "source": [
+        "res/LG.webp"
+      ]
+    },
+    {
+      "tag": "white",
+      "file": "icons_white.json",
+      "frames": 1,
+      "source": [
+        "res/JR.webp"
+      ]
+    },
+    {
+      "tag": "yinyang",
+      "file": "icons_yinyang.json",
+      "frames": 1,
+      "source": [
+        "res/cw.webp"
+      ]
+    },
+    {
+      "tag": "prism",
+      "file": "icons_prism.json",
+      "frames": 1,
+      "external_source": "6123d222a75f1e21420fb4e3f77e9391.jpg",
+      "source_sha256": "b447ef64c0afab1ba86c8574c0d90a9d73112f8cf391d4ee7f393e99589bf162",
+      "variants": [
+        "light",
+        "aod"
+      ]
+    },
+    {
+      "tag": "vortex",
+      "file": "icons_vortex.json",
+      "frames": 1,
+      "external_source": "7f4893e7ece091fe6c3d5fb1a92b5f55.jpg",
+      "source_sha256": "38a634e00b19256d3b2ecfe040a36dd7aff7b3e0548a296f2ef9624b7efd5f91",
+      "variants": [
+        "light",
+        "aod"
+      ]
+    },
+    {
+      "tag": "orbit",
+      "file": "icons_orbit.json",
+      "frames": 1,
+      "external_source": "bb159be1dc4b4b4a327855f9b78c3560.jpg",
+      "source_sha256": "ba35e655a272319527b82fa24ba35d8ca785423b21e43c6b3d6f6fcebf352092",
+      "variants": [
+        "light",
+        "aod"
+      ]
+    },
+    {
+      "tag": "neon",
+      "file": "icons_neon.json",
+      "frames": 1,
+      "external_source": "f2c639835eccc3c8ec74993559ec2a33.jpg",
+      "source_sha256": "aeee54a83416f782845387dce68ba79e8a95b7462fb529655a133b2d1bfcaa96",
+      "variants": [
+        "light",
+        "aod"
+      ]
+    }
+  ],
+  "animations": [
+    {
+      "tag": "buble",
+      "file": "animations_buble.json",
+      "frames": 24,
+      "source": [
+        "res/wS.webp",
+        "res/gf1.webp",
+        "res/Sn.webp",
+        "res/10.webp",
+        "res/EV.webp",
+        "res/ON.webp",
+        "res/1R.webp",
+        "res/LQ.webp",
+        "res/rs.webp",
+        "res/bj.webp",
+        "res/VX2.webp",
+        "res/7S.webp",
+        "res/5I1.webp",
+        "res/Oj.webp",
+        "res/Qk.webp",
+        "res/Zl.webp",
+        "res/Ej.webp",
+        "res/5E.webp",
+        "res/hV.webp",
+        "res/zO.webp",
+        "res/eL.webp",
+        "res/Q7.webp",
+        "res/Ly.webp",
+        "res/FT.webp"
+      ]
+    },
+    {
+      "tag": "cosmos",
+      "file": "animations_cosmos.json",
+      "frames": 23,
+      "source": [
+        "res/Wd1.webp",
+        "res/0R.webp",
+        "res/Ex.webp",
+        "res/9C.webp",
+        "res/i9.webp",
+        "res/7J.webp",
+        "res/j3.webp",
+        "res/os.webp",
+        "res/4z.webp",
+        "res/J8.webp",
+        "res/hk.webp",
+        "res/go.webp",
+        "res/lA.webp",
+        "res/Hs.webp",
+        "res/Rc.webp",
+        "res/QP.webp",
+        "res/Hy.webp",
+        "res/-Q.webp",
+        "res/HG.webp",
+        "res/1G.webp",
+        "res/EG.webp",
+        "res/5P1.webp",
+        "res/bY.webp"
+      ]
+    },
+    {
+      "tag": "creeper",
+      "file": "animations_creeper.json",
+      "frames": 24,
+      "source": [
+        "res/Mu.webp",
+        "res/sd.webp",
+        "res/RP.webp",
+        "res/tS1.webp",
+        "res/yQ.webp",
+        "res/eN.webp",
+        "res/tS.webp",
+        "res/gr.webp",
+        "res/XE.webp",
+        "res/l0.webp",
+        "res/ak.webp",
+        "res/QG.webp",
+        "res/fQ.webp",
+        "res/Ln.webp",
+        "res/uC.webp",
+        "res/vu.webp",
+        "res/gz.webp",
+        "res/Av.webp",
+        "res/Il.webp",
+        "res/5G.webp",
+        "res/fv.webp",
+        "res/aG.webp",
+        "res/7m.webp",
+        "res/BG.webp"
+      ]
+    },
+    {
+      "tag": "dust",
+      "file": "animations_dust.json",
+      "frames": 24,
+      "source": [
+        "res/cE.webp",
+        "res/HD.webp",
+        "res/RY.webp",
+        "res/I3.webp",
+        "res/FS.webp",
+        "res/vF.webp",
+        "res/DM.webp",
+        "res/YV.webp",
+        "res/-L.webp",
+        "res/eH.webp",
+        "res/_1.webp",
+        "res/GE1.webp",
+        "res/HA.webp",
+        "res/Q2.webp",
+        "res/Hr.webp",
+        "res/0T.webp",
+        "res/HC.webp",
+        "res/Oz.webp",
+        "res/Ee1.webp",
+        "res/8L.webp",
+        "res/eq.webp",
+        "res/U3.webp",
+        "res/Tq.webp",
+        "res/5f.webp"
+      ]
+    },
+    {
+      "tag": "firework",
+      "file": "animations_firework.json",
+      "frames": 24,
+      "source": [
+        "res/y9.webp",
+        "res/4K.webp",
+        "res/iL.webp",
+        "res/Nj.webp",
+        "res/gy.webp",
+        "res/Zv.webp",
+        "res/Wr.webp",
+        "res/Og.webp",
+        "res/kj.webp",
+        "res/8Y.webp",
+        "res/VG1.webp",
+        "res/8_.webp",
+        "res/23.webp",
+        "res/cg.webp",
+        "res/Nj1.webp",
+        "res/Gu.webp",
+        "res/5I.webp",
+        "res/wX.webp",
+        "res/Iv.webp",
+        "res/hE.webp",
+        "res/31.webp",
+        "res/N_.webp",
+        "res/-H.webp",
+        "res/BU.webp"
+      ]
+    },
+    {
+      "tag": "flare",
+      "file": "animations_flare.json",
+      "frames": 24,
+      "source": [
+        "res/md.webp",
+        "res/ma.webp",
+        "res/Jp.webp",
+        "res/zV.webp",
+        "res/J7.webp",
+        "res/E1.webp",
+        "res/G4.webp",
+        "res/Li2.webp",
+        "res/Rg.webp",
+        "res/rB.webp",
+        "res/4e.webp",
+        "res/5t.webp",
+        "res/lG.webp",
+        "res/xN.webp",
+        "res/iy.webp",
+        "res/ya.webp",
+        "res/ms.webp",
+        "res/Vp1.webp",
+        "res/0h.webp",
+        "res/Fn.webp",
+        "res/Ww.webp",
+        "res/Gq.webp",
+        "res/9N2.webp",
+        "res/Az.webp"
+      ]
+    },
+    {
+      "tag": "genshin",
+      "file": "animations_genshin.json",
+      "frames": 24,
+      "source": [
+        "res/HK.webp",
+        "res/Op.webp",
+        "res/Y0.webp",
+        "res/Pw.webp",
+        "res/vP1.webp",
+        "res/DY.webp",
+        "res/7c.webp",
+        "res/XJ.webp",
+        "res/-X.webp",
+        "res/-S.webp",
+        "res/Us.webp",
+        "res/bF.webp",
+        "res/Z0.webp",
+        "res/50.webp",
+        "res/cw1.webp",
+        "res/Ya.webp",
+        "res/qi.webp",
+        "res/Jh.webp",
+        "res/s51.webp",
+        "res/LD.webp",
+        "res/sX.webp",
+        "res/Ir.webp",
+        "res/Xe.webp",
+        "res/S6.webp"
+      ]
+    },
+    {
+      "tag": "halo",
+      "file": "animations_halo.json",
+      "frames": 24,
+      "source": [
+        "res/1Q1.webp",
+        "res/pg.webp",
+        "res/vQ.webp",
+        "res/pd.webp",
+        "res/1Q.webp",
+        "res/8Z.webp",
+        "res/JL.webp",
+        "res/jd.webp",
+        "res/yz.webp",
+        "res/GE.webp",
+        "res/SS.webp",
+        "res/bV.webp",
+        "res/-4.webp",
+        "res/or.webp",
+        "res/XV.webp",
+        "res/n2.webp",
+        "res/wi.webp",
+        "res/9N1.webp",
+        "res/46.webp",
+        "res/tV.webp",
+        "res/Yz.webp",
+        "res/v9.webp",
+        "res/mG.webp",
+        "res/5P.webp"
+      ]
+    },
+    {
+      "tag": "magic",
+      "file": "animations_magic.json",
+      "frames": 24,
+      "source": [
+        "res/0s.webp",
+        "res/gB1.webp",
+        "res/C4.webp",
+        "res/7o.webp",
+        "res/QN.webp",
+        "res/f5.webp",
+        "res/Pc.webp",
+        "res/63.webp",
+        "res/DL.webp",
+        "res/WR1.webp",
+        "res/dp.webp",
+        "res/gk.webp",
+        "res/qS.webp",
+        "res/o41.webp",
+        "res/Da.webp",
+        "res/bS.webp",
+        "res/A8.webp",
+        "res/fm.webp",
+        "res/ob.webp",
+        "res/9N.webp",
+        "res/HR.webp",
+        "res/5Q1.webp",
+        "res/ih.webp",
+        "res/Mh.webp"
+      ]
+    },
+    {
+      "tag": "originos",
+      "file": "animations_originos.json",
+      "frames": 24,
+      "source": [
+        "res/Zw.webp",
+        "res/F3.webp",
+        "res/m4.webp",
+        "res/du.webp",
+        "res/YI.webp",
+        "res/40.webp",
+        "res/jS.webp",
+        "res/CG.webp",
+        "res/SD.webp",
+        "res/v-.webp",
+        "res/2_.webp",
+        "res/jS1.webp",
+        "res/n8.webp",
+        "res/-t.webp",
+        "res/BN.webp",
+        "res/j6.webp",
+        "res/hp.webp",
+        "res/T7.webp",
+        "res/oG.webp",
+        "res/Oh.webp",
+        "res/wC.webp",
+        "res/Vp.webp",
+        "res/Lh.webp",
+        "res/w4.webp"
+      ]
+    },
+    {
+      "tag": "originosblue",
+      "file": "animations_originosblue.json",
+      "frames": 24,
+      "source": [
+        "res/k5.webp",
+        "res/0k.webp",
+        "res/uw.webp",
+        "res/Pk.webp",
+        "res/fY.webp",
+        "res/tD.webp",
+        "res/Z_.webp",
+        "res/vD.webp",
+        "res/eU.webp",
+        "res/7A.webp",
+        "res/ND.webp",
+        "res/lO.webp",
+        "res/UK.webp",
+        "res/Md.webp",
+        "res/0C.webp",
+        "res/GP.webp",
+        "res/QA.webp",
+        "res/kN.webp",
+        "res/oE.webp",
+        "res/hr.webp",
+        "res/AV.webp",
+        "res/s5.webp",
+        "res/7W.webp",
+        "res/gf.webp"
+      ]
+    },
+    {
+      "tag": "oxygenos",
+      "file": "animations_oxygenos.json",
+      "frames": 24,
+      "source": [
+        "res/AR.webp",
+        "res/Wd.webp",
+        "res/-D.webp",
+        "res/5a.webp",
+        "res/NT.webp",
+        "res/jg.webp",
+        "res/mL.webp",
+        "res/JQ.webp",
+        "res/t1.webp",
+        "res/Lt.webp",
+        "res/4X.webp",
+        "res/5Q.webp",
+        "res/JE.webp",
+        "res/z8.webp",
+        "res/zF.webp",
+        "res/Ii1.webp",
+        "res/lS.webp",
+        "res/1Z.webp",
+        "res/TM.webp",
+        "res/55.webp",
+        "res/RO.webp",
+        "res/zv.webp",
+        "res/iZ.webp",
+        "res/vH.webp"
+      ]
+    },
+    {
+      "tag": "ripple",
+      "file": "animations_ripple.json",
+      "frames": 24,
+      "source": [
+        "res/Ki.webp",
+        "res/WG.webp",
+        "res/SC.webp",
+        "res/b0.webp",
+        "res/pG.webp",
+        "res/ld.webp",
+        "res/UU.webp",
+        "res/2L.webp",
+        "res/uX.webp",
+        "res/Af.webp",
+        "res/an.webp",
+        "res/3y.webp",
+        "res/9J.webp",
+        "res/dg.webp",
+        "res/_t.webp",
+        "res/Eu.webp",
+        "res/P0.webp",
+        "res/M-.webp",
+        "res/Gy.webp",
+        "res/1S.webp",
+        "res/17.webp",
+        "res/8X.webp",
+        "res/YC.webp",
+        "res/h8.webp"
+      ]
+    },
+    {
+      "tag": "spark",
+      "file": "animations_spark.json",
+      "frames": 24,
+      "source": [
+        "res/nk.webp",
+        "res/u9.webp",
+        "res/97.webp",
+        "res/h5.webp",
+        "res/SL.webp",
+        "res/1o.webp",
+        "res/gP1.webp",
+        "res/K0.webp",
+        "res/aA.webp",
+        "res/lH.webp",
+        "res/de.webp",
+        "res/K6.webp",
+        "res/h9.webp",
+        "res/Ee.webp",
+        "res/TZ.webp",
+        "res/45.webp",
+        "res/UT.webp",
+        "res/5T.webp",
+        "res/zK.webp",
+        "res/HY.webp",
+        "res/wY.webp",
+        "res/Ii.webp",
+        "res/oo.webp",
+        "res/9j.webp"
+      ]
+    },
+    {
+      "tag": "stardust",
+      "file": "animations_stardust.json",
+      "frames": 24,
+      "source": [
+        "res/Rl.webp",
+        "res/fA.webp",
+        "res/IC.webp",
+        "res/Vk.webp",
+        "res/HB.webp",
+        "res/wT.webp",
+        "res/eb.webp",
+        "res/r2.webp",
+        "res/Yd.webp",
+        "res/Gd.webp",
+        "res/SJ.webp",
+        "res/OO.webp",
+        "res/3N.webp",
+        "res/pD.webp",
+        "res/5n.webp",
+        "res/9-.webp",
+        "res/e5.webp",
+        "res/L9.webp",
+        "res/eC.webp",
+        "res/zG.webp",
+        "res/Fh.webp",
+        "res/gw.webp",
+        "res/zX.webp",
+        "res/g-.webp"
+      ]
+    },
+    {
+      "tag": "swirl",
+      "file": "animations_swirl.json",
+      "frames": 24,
+      "source": [
+        "res/7t.webp",
+        "res/Li1.webp",
+        "res/wI.webp",
+        "res/A6.webp",
+        "res/_D.webp",
+        "res/xA.webp",
+        "res/Vh.webp",
+        "res/VG.webp",
+        "res/mo.webp",
+        "res/Ll.webp",
+        "res/7e.webp",
+        "res/aT.webp",
+        "res/Jl.webp",
+        "res/qu.webp",
+        "res/Jy.webp",
+        "res/D9.webp",
+        "res/yf.webp",
+        "res/um.webp",
+        "res/iG.webp",
+        "res/vf.webp",
+        "res/gB.webp",
+        "res/t5.webp",
+        "res/Ic.webp",
+        "res/EI.webp"
+      ]
+    },
+    {
+      "tag": "transparency",
+      "file": "animations_transparency.json",
+      "frames": 24,
+      "source": [
+        "res/dC.webp",
+        "res/OM.webp",
+        "res/pc.webp",
+        "res/VP.webp",
+        "res/0P.webp",
+        "res/Yw.webp",
+        "res/jb.webp",
+        "res/jj.webp",
+        "res/Eq.webp",
+        "res/VX1.webp",
+        "res/To.webp",
+        "res/cU.webp",
+        "res/hB.webp",
+        "res/iQ.webp",
+        "res/gP.webp",
+        "res/Lk.webp",
+        "res/7E.webp",
+        "res/O1.webp",
+        "res/tJ.webp",
+        "res/vP.webp",
+        "res/cl.webp",
+        "res/4p.webp",
+        "res/o4.webp",
+        "res/2f.webp"
+      ]
+    },
+    {
+      "tag": "aqua",
+      "file": "animations_aqua.json",
+      "frames": 24,
+      "external_source": "output-onlinegiftools.json",
+      "source_sha256": "e30328b13d5385d529e4d7e22ee4dbff758366c27fc63507649dc4ec0b05a035"
+    }
+  ]
+}

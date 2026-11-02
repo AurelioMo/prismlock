@@ -1,0 +1,29 @@
+name: Bug report
+description: Report a reproducible UI or visual-effect problem.
+body:
+  - type: markdown
+    attributes:
+      value: Do not attach private screenshots, full device logs, serial numbers or biometric information.
+  - type: input
+    id: version
+    attributes:
+      label: PrismLock version or commit
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Device, Android, One UI and LSPosed versions
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps, expected behavior and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitized evidence
+      description: Include the selected fingerprint/effect and whether this happens in AOD, light or dark mode.

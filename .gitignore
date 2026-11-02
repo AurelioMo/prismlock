@@ -1,0 +1,17 @@
+.gradle/
+.idea/
+.DS_Store
+**/build/
+local.properties
+*.iml
+*.apk
+*.aab
+*.jks
+*.keystore
+*.pem
+*.key
+.env
+.env.*
+__pycache__/
+*.pyc
+graphify-out/

@@ -1,0 +1,17 @@
+<resources>
+    <style name="SamsungCatalogTheme" parent="android:style/Theme.DeviceDefault.DayNight">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:colorAccent">#3E91FF</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#010101</item>
+        <item name="android:navigationBarColor">#010101</item>
+    </style>
+    <style name="SamsungCatalogLightTheme" parent="android:style/Theme.DeviceDefault.Light.NoActionBar">
+        <item name="android:colorAccent">#185FC1</item>
+    </style>
+    <style name="SamsungCatalogDarkTheme" parent="android:style/Theme.DeviceDefault.NoActionBar">
+        <item name="android:colorAccent">#A8C8FF</item>
+    </style>
+</resources>

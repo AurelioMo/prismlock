@@ -1,0 +1,92 @@
+package io.github.aureliomo.prismlock;
+
+import android.content.Context;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+final class Catalog {
+    static String title(String tag) {
+        switch (tag) {
+            case "aqua": return "Aqua";
+            case "buble": return "Bubble";
+            case "aosp": return "AOSP";
+            case "bluegradient": return "Blue gradient";
+            case "coloros": return "ColorOS";
+            case "coloros2": return "ColorOS 2";
+            case "coloros3": return "ColorOS 3";
+            case "miui": return "MIUI";
+            case "nothingos": return "Nothing OS";
+            case "originos": return "OriginOS";
+            case "originosblue": return "OriginOS blue";
+            case "oxygenos": return "OxygenOS";
+            case "starblue": return "Star blue";
+            case "yinyang": return "Yin Yang";
+            default: return tag.substring(0, 1).toUpperCase(java.util.Locale.ROOT) + tag.substring(1);
+        }
+    }
+
+    static String read(Context context, String file) throws Exception {
+        if (!file.matches("(?:icons|animations)_[a-z0-9_]+\\.json") && !"index.json".equals(file)) {
+            throw new IllegalArgumentException("Invalid catalog file");
+        }
+        try (InputStream input = context.getAssets().open("catalog/" + file)) {
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+            return output.toString(StandardCharsets.UTF_8.name());
+        }
+    }
+
+    static List<String> tags(Context context, String kind) throws Exception {
+        JSONArray entries = new JSONObject(read(context, "index.json")).getJSONArray(kind);
+        List<String> result = new ArrayList<>();
+        for (int index = 0; index < entries.length(); index++) {
+            result.add(entries.getJSONObject(index).getString("tag"));
+        }
+        return result;
+    }
+
+    static byte[] selected(Context context, String kind, String tag, int size) throws Exception {
+        JSONObject composition = new JSONObject(read(context, kind + "_" + tag + ".json"));
+        JSONArray layers = composition.getJSONArray("layers");
+        JSONArray assets = composition.getJSONArray("assets");
+        JSONArray bounds = composition.getJSONArray("catalogBounds");
+        double scale = CatalogScale.percent(kind, size, bounds.getDouble(2) - bounds.getDouble(0),
+                bounds.getDouble(3) - bounds.getDouble(1));
+        if ("animations".equals(kind)) scale *= Math.max(48, Math.min(132, composition.optDouble("catalogFootprint", 132))) / 132;
+        for (int index = 0; index < layers.length(); index++) {
+            JSONObject layer = layers.getJSONObject(index);
+            JSONObject asset = null;
+            for (int assetIndex = 0; assetIndex < assets.length(); assetIndex++) {
+                JSONObject candidate = assets.getJSONObject(assetIndex);
+                if (candidate.getString("id").equals(layer.getString("refId"))) asset = candidate;
+            }
+            if (asset == null) throw new IllegalArgumentException("Missing image asset");
+            layer.getJSONObject("ks").getJSONObject("a").put("k", new JSONArray()
+                    .put(asset.getInt("w") / 2.0 + (bounds.getDouble(0) + bounds.getDouble(2)) / 2)
+                    .put(asset.getInt("h") / 2.0 + (bounds.getDouble(1) + bounds.getDouble(3)) / 2).put(0));
+            layers.getJSONObject(index).getJSONObject("ks").getJSONObject("s")
+                    .put("k", new JSONArray().put(scale).put(scale).put(100));
+        }
+        return composition.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    static String iconTag(Context context, String tag, String variant) throws Exception {
+        JSONArray entries = new JSONObject(read(context, "index.json")).getJSONArray("icons");
+        for (int index = 0; index < entries.length(); index++) {
+            JSONObject entry = entries.getJSONObject(index);
+            if (!tag.equals(entry.getString("tag"))) continue;
+            JSONArray variants = entry.optJSONArray("variants");
+            if (variants != null) for (int position = 0; position < variants.length(); position++) {
+                if (variant.equals(variants.getString(position))) return tag + "_" + variant;
+            }
+        }
+        return tag;
+    }
+}
