@@ -67,9 +67,9 @@ AOD behavior still need physical-device acceptance; a successful build is not pr
 
 ## Screenshots
 
-<p align="center">
-  <img src="docs/screenshots/fingerprints.png" width="320" alt="PrismLock fingerprint catalog on Samsung">
-</p>
+| Fingerprints | Animations | Settings |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/fingerprints.png" width="260" alt="Fingerprint catalog"> | <img src="docs/screenshots/animations.png" width="260" alt="Touch animation catalog"> | <img src="docs/screenshots/settings.png" width="260" alt="PrismLock settings"> |
 
 ## Source and build
 
