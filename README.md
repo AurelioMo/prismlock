@@ -1,64 +1,83 @@
-<p align="center">
-  <img src="docs/branding/logo.png" width="144" alt="PrismLock logo">
-</p>
+<div align="center">
+  <img src="docs/branding/logo-transparent.png" width="150" alt="PrismLock logo">
+  <h1>PrismLock</h1>
+  <p>Fingerprint icons and touch animations for Samsung.</p>
+</div>
 
-# PrismLock
+[![Release](https://img.shields.io/github/v/release/AurelioMo/prismlock?include_prereleases&label=Download&color=blue&logo=github)](https://github.com/AurelioMo/prismlock/releases)
+[![LSPosed](https://img.shields.io/badge/LSPosed-Module-orange)](https://github.com/LSPosed/LSPosed)
+[![Build](https://github.com/AurelioMo/prismlock/actions/workflows/build.yml/badge.svg)](https://github.com/AurelioMo/prismlock/actions/workflows/build.yml)
+[![Source](https://img.shields.io/badge/Source-Available-222222?logo=github)](https://github.com/AurelioMo/prismlock/tree/main/app)
 
-**Fingerprint artwork and touch effects for Samsung.**
+PrismLock is an Xposed / LSPosed module for customizing fingerprint icons and touch
+effects on Samsung One UI. Browse the built-in catalog, import your own artwork,
+and select independent icons and animations. Changes save automatically.
 
-PrismLock is an experimental LSPosed module with a native Android catalog of
-fingerprint designs and unlock touch animations. It changes visual resources in
-Samsung's biometrics app, not the authentication result or sensor behavior.
+## Download
 
-> Development preview: **0.2.0-preview**. This repository is private while
-> third-party redistribution permissions and device acceptance are reviewed.
-> No public download or stable release is available yet.
+**[Download the APK from Releases](https://github.com/AurelioMo/prismlock/releases).**
+Open the newest release, expand **Assets**, and download `PrismLock-*.apk`.
+`SHA256SUMS` verifies the download. The source ZIP/TAR files are not installable apps.
+Current version: **0.2.0-preview**. This is an experimental preview, not a stable release.
 
-## Features
+## Compatibility
 
-- 28 fingerprint designs and 18 touch effects with separate selections.
-- Automatic saving, English interface, and system/light/dark appearance.
-- Colored, black/light-mode and white/AOD variants for Prism, Vortex, Orbit and Neon.
-- Separate fingerprint and animation previews with size normalization.
-- Optional PNG or Lottie imports for light and dark/AOD modes.
-- A customization switch that passes through to Samsung's stock resources.
+| Component | Requirements |
+| --- | --- |
+| Module framework | LSPosed with legacy Xposed API 82 support |
+| Firmware | Compatible Samsung One UI with in-display fingerprint UI |
+| Android | Minimum API 26 to install; firmware compatibility is not guaranteed |
+| Module scope | `com.samsung.android.biometrics.app.setting` only |
+| Development device | Galaxy S23 / SM-S911B, custom One UI 9 / Android 17 ROM |
 
-## Requirements
-
-- A rooted Samsung device with LSPosed and compatible in-display fingerprint UI.
-- Module scope: `com.samsung.android.biometrics.app.setting` **only**.
-- A recovery path for disabling modules if the biometrics UI misbehaves.
-
-Development has used a Galaxy S23 (SM-S911B) with a custom One UI 9 / Android 17 ROM.
-The user has reported working lockscreen icons and touch effects. Compatibility
-with other devices and firmware is unverified; this is not a general support claim.
-The 0.2.0 Aqua update and AOD variants still require physical device acceptance.
+Other devices and firmware are unverified. A low minimum SDK does not establish
+support for every Android version. Root and a recovery path are required.
 
 ## Installation
 
-1. Build a development APK using the instructions below and install it.
-2. Enable **PrismLock** in LSPosed with only the scope listed above.
-3. Follow LSPosed's module activation/restart requirements. PrismLock does not
-   restart system processes or reboot the phone automatically.
-4. Choose a fingerprint and touch effect. Selections save automatically; there
-   is no Apply button.
-5. Turn off LockStar's fingerprint effect to avoid conflicting effects.
+1. Download and install the APK from **[Releases](https://github.com/AurelioMo/prismlock/releases)**.
+2. Activate **PrismLock** in LSPosed, selecting only the scope listed above.
+3. Follow LSPosed's activation/restart requirements. The app does not reboot or
+   restart Samsung system processes automatically.
+4. Open PrismLock and select a fingerprint and animation. There is no Apply step.
+5. Turn off LockStar's fingerprint effect to avoid conflicts.
 
-**Migrating from the research preview:** the package changed from
-`com.fpring.samsung` to `io.github.aureliomo.prismlock`. Android treats these as
-different applications. Disable the old module before enabling PrismLock, and
-reselect your preferences in the new app. Do not enable both modules together.
-Old research-preview data is not deleted automatically.
+**Coming from the research app?** Disable `com.fpring.samsung` before enabling
+PrismLock (`io.github.aureliomo.prismlock`). They are different packages; preferences
+do not migrate automatically. Never enable both modules or RingPrint together.
 
-To return to stock artwork, turn off customization. To fully unload the hooks,
-disable the module in LSPosed and follow its restart requirements. Do not replace
-or re-sign Samsung's system APK.
+**Coming from a debug build of PrismLock?** The public APK uses a different signing
+key. Disable the module and uninstall the debug build before installing the release
+APK; this removes its app data. See [signing and updates](docs/signing.md).
 
-## Build
+## Features
 
-Requires JDK 17, Python 3.10+ for catalog checks, Android SDK platform 36 and access
-to Google Maven, Maven Central and the Xposed API repository. Gradle 8.13 is pinned
-by the checked-in wrapper and its SHA-256 checksum.
+- Built-in library of **28 fingerprint designs** and **18 touch animations**.
+- Independent fingerprint and effect selection with automatic saving.
+- Color, black/light-mode and white/AOD variants for Prism, Vortex, Orbit and Neon.
+- PNG and Lottie imports for light and dark/AOD modes.
+- Separate fingerprint and animation previews, with visible-bound size normalization.
+- English interface with system, light and dark appearance.
+- Smaller **0.8-second Aqua effect**, with a transparent final frame.
+- Customization switch to pass through to Samsung's default visual resources.
+
+The module changes visual resources, not authentication results, enrollment,
+illumination masks, brightness control or sensor behavior. Aqua's newest fix and
+AOD behavior still need physical-device acceptance; a successful build is not proof.
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/fingerprints.png" width="320" alt="PrismLock fingerprint catalog on Samsung">
+</p>
+
+## Source and build
+
+Unlike the referenced Xiaomi distribution page, this repository includes the
+application source. Source availability does not override third-party license terms.
+
+Requires JDK 17, Android SDK platform 36 and Python 3.10+ for catalog validation.
+Gradle 8.13 and its distribution checksum are pinned in the checked-in wrapper.
 
 ```sh
 export ANDROID_HOME=/path/to/your/android-sdk
@@ -66,43 +85,43 @@ python3 scripts/check_catalog.py
 ./gradlew --no-daemon assembleDebug
 ```
 
-On Windows use `gradlew.bat`. Android Studio can use the same wrapper and JDK 17.
-The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`.
-Debug builds use the local Android debug key; they are not release-signed builds.
-Different developer or CI keys cannot update an already-installed build in place.
-
-The optional `scripts/generate_icons.py` requires Pillow. Normal builds do not
-require Pillow because generated launcher icons are checked in.
-
-## Repository layout
+On Windows use `gradlew.bat`. The debug APK is in
+`app/build/outputs/apk/debug/app-debug.apk`. For signed distribution builds, follow
+[release signing](docs/signing.md); never commit credentials or keystores.
 
 ```text
-app/                 Android app, module hooks and runtime catalog assets
-docs/                Architecture, device validation, branding and provenance
-gradle/wrapper/      Pinned Gradle wrapper and checksum
-scripts/             Portable catalog checks and launcher-icon generation
-.github/             Build workflow and issue/PR templates
+app/                 Android application, hooks and runtime artwork
+docs/                Architecture, testing, branding and provenance
+gradle/wrapper/      Pinned build wrapper
+scripts/             Portable catalog validation and icon generation
+.github/             CI and issue/PR templates
 ```
 
-Research APKs, decompiled firmware, device dumps, build caches, old APKs, local SDKs,
-private device screenshots and signing keys are deliberately not part of this repo.
+Research dumps, firmware APKs, local SDKs, caches, old builds and signing keys are
+not included. See [architecture](docs/architecture.md), [testing](docs/testing.md),
+[contributing](CONTRIBUTING.md), [security](SECURITY.md) and [changelog](CHANGELOG.md).
 
-## Documentation
+## Contacts and credits
 
-- [Architecture](docs/architecture.md)
-- [Device acceptance checklist](docs/testing.md)
-- [Third-party notices and release blockers](docs/third-party-notices.md)
-- [Contributing](CONTRIBUTING.md)
-- [Security reporting](SECURITY.md)
-- [Changelog](CHANGELOG.md)
+Developer: **[AurelioMo](https://github.com/AurelioMo)**.
+Report bugs and suggestions through **[Issues](https://github.com/AurelioMo/prismlock/issues)**.
 
-## Credits and licensing
+Original catalog reference and artwork: **custombeta / Fingerprint Catalog**.
+Samsung integration research and inherited implementation: **ELPEDR / RingPrint**.
+Samsung resources and user-supplied artwork retain their respective ownership.
+PrismLock is not affiliated with Samsung, Xiaomi, Good Lock or LSPosed.
 
-Developed by [AurelioMo](https://github.com/AurelioMo). The supplied Fingerprint
-Catalog by **custombeta** informed the catalog reconstruction; **ELPEDR/RingPrint**
-provided Samsung integration research, not the app's interface design. Samsung
-resources and user-supplied artwork retain their respective ownership.
+## Third-party permissions
 
-No blanket open-source license is granted for this mixed-provenance repository.
-Public redistribution is blocked until the permissions described in the notices
-are resolved. PrismLock is not affiliated with Samsung, Xiaomi, Good Lock or LSPosed.
+Public source and preview availability do **not** establish permission to reuse
+third-party content. The upstream custombeta license restricts derivative
+publication without written permission; that permission has not been obtained.
+Other asset permissions are also unresolved. There is no blanket MIT/Apache license
+for this mixed-provenance project. See [the provenance inventory](docs/third-party-notices.md)
+and [permission-request drafts](docs/permission-requests.md) for the outstanding work.
+
+> [!CAUTION]
+> Experimental Samsung module. Keep a way to disable it and do not install on an
+> unsupported firmware expecting guaranteed compatibility. To fully unload hooks,
+> disable the module in LSPosed and follow its restart requirements. Never replace
+> or re-sign Samsung's system biometrics APK.

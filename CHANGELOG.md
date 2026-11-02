@@ -10,6 +10,8 @@
 - Reflect Aqua's scale and fade-out in the in-app preview.
 - Add a pinned Gradle wrapper, portable catalog checks and CI build workflow.
 - Organize English documentation and third-party release blockers.
+- Publish source and a separately signed preview APK with checksums.
+- Provide a transparent repository logo and a download-first project page.
 
 This build needs module reactivation because its package is different. The old
 research app is not uninstalled and its preferences are not migrated automatically.

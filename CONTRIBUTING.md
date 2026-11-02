@@ -1,6 +1,6 @@
 # Contributing
 
-PrismLock is a private development preview, not an open-licensed public project.
+PrismLock is a public development preview, not a blanket open-licensed project.
 Confirm the provenance of submitted artwork and code before proposing changes.
 
 ## Focus

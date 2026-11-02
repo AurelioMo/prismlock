@@ -1,6 +1,9 @@
 plugins {
     id 'com.android.application'
 }
+def signingPath = providers.environmentVariable('PRISMLOCK_KEYSTORE').orNull
+def signingPassword = providers.environmentVariable('PRISMLOCK_STORE_PASSWORD').orNull
+def signingKeyPassword = providers.environmentVariable('PRISMLOCK_KEY_PASSWORD').orNull
 android {
     namespace 'io.github.aureliomo.prismlock'
     compileSdk 36
@@ -14,9 +17,35 @@ android {
         versionCode 20
         versionName '0.2.0-preview'
     }
+    signingConfigs {
+        release {
+            if (signingPath && signingPassword && signingKeyPassword) {
+                storeFile file(signingPath)
+                storePassword signingPassword
+                keyAlias 'prismlock'
+                keyPassword signingKeyPassword
+            }
+        }
+    }
+    buildTypes {
+        release {
+            if (signingPath && signingPassword && signingKeyPassword) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+    }
+}
+tasks.configureEach { task ->
+    if (task.name == 'assembleRelease' || task.name == 'bundleRelease') {
+        task.doFirst {
+            if (!signingPath || !signingPassword || !signingKeyPassword) {
+                throw new GradleException('Release signing requires PRISMLOCK_KEYSTORE, PRISMLOCK_STORE_PASSWORD and PRISMLOCK_KEY_PASSWORD.')
+            }
+        }
     }
 }
 dependencies {
