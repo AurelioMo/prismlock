@@ -21,7 +21,7 @@ Samsung devices and One UI builds, not only on one model or firmware version.
 
 **[Download the latest APK from Releases](https://github.com/AurelioMo/prismlock/releases).**
 Open the newest release, expand **Assets**, and download `PrismLock-*.apk`.
-`SHA256SUMS` verifies the download. The source ZIP/TAR files are not installable apps.
+The source ZIP/TAR files are not installable apps.
 
 Current version: **1.0.0**.
 
@@ -55,10 +55,9 @@ PrismLock checks GitHub Releases for stable updates when it opens. When a newer
 version is available, **Settings → App → Updates** shows it and offers a one-tap
 update.
 
-The APK is downloaded directly from GitHub, checked against the published SHA-256
-digest, verified against the installed PrismLock signing certificate, and installed
-in place. Rooted devices use a silent `pm install`; otherwise Android's system
-installer asks for confirmation. Your settings and selections are preserved.
+The APK is downloaded directly from GitHub and installed in place. Rooted devices use
+a silent `pm install`; otherwise Android's system installer asks for confirmation.
+Your settings and selections are preserved.
 
 ## Features
 
@@ -84,7 +83,7 @@ enrollment, illumination masks, brightness control or sensor behavior.
 ## Source and build
 
 Requires JDK 17, Android SDK platform 36 and Python 3.10+ for catalog validation.
-Gradle 8.13 and its distribution checksum are pinned in the checked-in wrapper.
+Gradle 8.13 is pinned in the checked-in wrapper.
 
 ```sh
 export ANDROID_HOME=/path/to/your/android-sdk

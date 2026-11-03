@@ -19,7 +19,7 @@ export PRISMLOCK_KEY_PASSWORD='your-key-password'
 
 The key alias must be `prismlock`. The command fails if the required signing
 environment is absent. Verify the APK with Android build-tools `apksigner verify
---print-certs` and `zipalign -c -P 16 4` before uploading it with a SHA-256 checksum.
+--print-certs` and `zipalign -c -P 16 4` before uploading it.
 
 ## Publishing an update
 
@@ -30,7 +30,7 @@ are ignored.
 2. Run `python3 scripts/check_catalog.py` and `./gradlew --no-daemon assembleRelease`.
 3. Verify the certificate and alignment with the commands above.
 4. Create a normal GitHub release tagged `vX.Y.Z` (for example `v1.0.1`).
-5. Upload `PrismLock-X.Y.Z.apk` and `SHA256SUMS` as release assets.
+5. Upload `PrismLock-X.Y.Z.apk` as the release asset.
 6. Publish the release as the latest stable release, not as a pre-release.
 
 Users on a release signed with the same certificate can update in place from

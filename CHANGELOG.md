@@ -4,7 +4,7 @@
 
 - Promote PrismLock to the stable 1.0.0 release.
 - Add built-in GitHub update checks with a one-tap download and install flow.
-- Verify update SHA-256 digests and the PrismLock signing certificate before installing.
+- Verify update integrity and the PrismLock signing certificate before installing.
 - Install silently through root when available, with the Android system installer as fallback.
 - Match Samsung's full fingerprint and touch-effect asset families, using the same
   device-independent `AssetManager` hook as RingPrint.
