@@ -115,11 +115,10 @@ Report bugs and suggestions through **[Issues](https://github.com/AurelioMo/pris
 
 Original catalog reference and artwork: **custombeta / Fingerprint Catalog**.
 Samsung integration research: **ELPEDR / RingPrint**.
-Samsung resources and user-supplied artwork retain their respective ownership.
+Aqua animation, Prism/Vortex/Orbit/Neon artwork and the PrismLock logo were supplied
+for this project. Samsung resources retain their respective ownership.
 PrismLock is not affiliated with Samsung, Xiaomi, Good Lock or LSPosed.
 
-## License
-
-PrismLock is distributed with third-party artwork and research resources. Those
-resources retain their original ownership and are not relicensed by this repository.
-See [third-party notices](docs/third-party-notices.md) for details.
+Third-party materials are credited here and in
+[third-party credits](docs/third-party-notices.md). They remain the property of
+their respective owners and are not relicensed by this repository.

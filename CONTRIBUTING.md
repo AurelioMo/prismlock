@@ -1,7 +1,7 @@
 # Contributing
 
 PrismLock is a public project with third-party artwork and research resources.
-Confirm the provenance of submitted artwork and code before proposing changes.
+Keep credits accurate and record the provenance of submitted artwork and code.
 
 ## Focus
 

@@ -8,6 +8,6 @@ Describe the focused change and its purpose.
 - [ ] Debug build succeeds.
 - [ ] Device tests are listed separately from desktop checks.
 - [ ] No secrets, dumps, private screenshots or signing keys are included.
-- [ ] New artwork/code provenance and required permissions are documented.
+- [ ] New artwork/code is credited and its provenance is documented.
 
 Device/firmware tested and remaining limitations:

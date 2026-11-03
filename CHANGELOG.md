@@ -23,7 +23,7 @@
 - Reduce Aqua's visible footprint from 132 to 96 composition units.
 - Reflect Aqua's scale and fade-out in the in-app preview.
 - Add a pinned Gradle wrapper, portable catalog checks and CI build workflow.
-- Organize English documentation and third-party release blockers.
+- Organize English documentation and third-party credits.
 - Publish source and a separately signed preview APK with checksums.
 - Provide a transparent repository logo and a download-first project page.
 
