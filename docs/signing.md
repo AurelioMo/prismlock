@@ -1,10 +1,10 @@
 # Release signing
 
-Official preview APKs use a dedicated local signing key, not the Android debug key.
-The keystore and passwords are outside the repository and are never uploaded.
-Keep a secure backup: future in-place updates must use the same certificate.
+Official PrismLock APKs use a dedicated release signing key, not the Android debug
+key. The keystore and passwords stay outside the repository and are never uploaded.
+Keep a secure backup: in-place updates must use the same certificate.
 
-Official preview certificate SHA-256:
+Official release certificate SHA-256:
 
 ```text
 6e89f50c348d5857f85476d77622ef6c39334ae895661506a55c63a98b06c850
@@ -21,13 +21,26 @@ The key alias must be `prismlock`. The command fails if the required signing
 environment is absent. Verify the APK with Android build-tools `apksigner verify
 --print-certs` and `zipalign -c -P 16 4` before uploading it with a SHA-256 checksum.
 
-## Switching from a developer build
+## Publishing an update
 
-A debug-signed installation cannot be updated by the release-signed APK even when
-the package name is identical. Disable the module in LSPosed, save your chosen
-settings, and uninstall the debug build before installing the public preview.
-Uninstalling removes its app data. Enable the new installation in LSPosed again.
-Future official releases signed by the same key can update it normally.
+The in-app updater reads the latest **stable** GitHub release. Pre-releases and drafts
+are ignored.
+
+1. Increase `versionCode` and `versionName` in `app/build.gradle`.
+2. Run `python3 scripts/check_catalog.py` and `./gradlew --no-daemon assembleRelease`.
+3. Verify the certificate and alignment with the commands above.
+4. Create a normal GitHub release tagged `vX.Y.Z` (for example `v1.0.1`).
+5. Upload `PrismLock-X.Y.Z.apk` and `SHA256SUMS` as release assets.
+6. Publish the release as the latest stable release, not as a pre-release.
+
+Users on a release signed with the same certificate can update in place from
+**Settings → App → Updates**. Settings are preserved.
+
+## Signing mismatch
+
+An APK signed with a different key cannot update an existing installation. If a
+debug build is installed, uninstall it before installing the official release. This
+removes its app data. Official releases can update each other normally.
 
 The installed local developer build is not silently uninstalled or migrated by
 publishing a release. Do not publish keystores, password files or debug credentials.

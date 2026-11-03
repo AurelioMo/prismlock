@@ -3,7 +3,7 @@
 This is a provenance inventory, not a grant of rights. There is intentionally no
 MIT, Apache or other blanket license covering this mixed-provenance project.
 Public availability does not grant additional rights over third-party materials.
-The maintainer has requested public source and preview distribution. The permissions
+The maintainer has requested public source and stable distribution. The permissions
 below remain unresolved; no authorization is implied by a GitHub release.
 
 | Material | Source | Status |
@@ -36,7 +36,7 @@ and it does not authorize this derivative. Current upstream references:
 3. Replace or obtain permission for Samsung fonts, wallpapers and copied resources.
 4. Confirm licenses for imported artwork, Aqua and branding.
 5. Choose a license only for code and assets that the maintainer can license.
-6. Complete device acceptance and establish a release-signing/update policy.
+6. Maintain the release-signing and in-app update policy.
 
 ## Research and build guidance
 

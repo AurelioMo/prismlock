@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.0 - 2026-11-03
+
+- Promote PrismLock to the stable 1.0.0 release.
+- Add built-in GitHub update checks with a one-tap download and install flow.
+- Verify update SHA-256 digests and the PrismLock signing certificate before installing.
+- Install silently through root when available, with the Android system installer as fallback.
+- Match Samsung's full fingerprint and touch-effect asset families, using the same
+  device-independent `AssetManager` hook as RingPrint.
+- Move the hook to immutable configuration snapshots so a failed refresh keeps the
+  last known-good settings.
+- Pre-build imported PNG Lottie payloads once per configuration change.
+- Keep the existing interface, catalog, previews and visual design unchanged.
+- Refresh the README and release documentation for the stable channel.
+
 ## 0.2.0-preview - 2026-11-02
 
 - Introduce the PrismLock name and user-provided four-point prism logo.

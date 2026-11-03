@@ -232,7 +232,7 @@ final class CatalogScreen {
         parent.addView(row);
     }
 
-    void settingValue(LinearLayout parent, String name, String value, Runnable action) {
+    TextView settingValue(LinearLayout parent, String name, String value, Runnable action) {
         LinearLayout row = new LinearLayout(activity);
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setMinimumHeight(dp(62));
@@ -248,6 +248,7 @@ final class CatalogScreen {
         row.addView(chevron, new LinearLayout.LayoutParams(dp(18), dp(18)));
         row.setOnClickListener(view -> action.run());
         parent.addView(row);
+        return detail;
     }
 
     private void addSettingIcon(LinearLayout row, String name) {
@@ -258,6 +259,7 @@ final class CatalogScreen {
             case "Custom icons": glyph = "import"; break;
             case "Reset customization": glyph = "refresh"; break;
             case "Preview": glyph = "animation"; break;
+            case "Updates": glyph = "refresh"; break;
             default: glyph = "info"; break;
         }
         ImageView icon = new ImageView(activity);

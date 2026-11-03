@@ -10,9 +10,8 @@ import android.graphics.BitmapFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.io.File;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStream;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,96 +23,120 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * Replaces Samsung fingerprint artwork and touch-effect data without changing authentication.
+ *
+ * <p>The hook mirrors the asset family used by RingPrint: every
+ * {@code ic_fingerprint_*.json} and
+ * {@code indisplay_fingerprint_touch_effect_*.json} asset is eligible, while the
+ * selected artwork decides what is returned. Samsung keeps ownership of timing,
+ * authentication and sensor behavior.</p>
  */
 public class Hook implements IXposedHookLoadPackage {
     private static final String TARGET = "com.samsung.android.biometrics.app.setting";
     private static final Uri CFG = Uri.parse("content://io.github.aureliomo.prismlock.config/cfg");
     private static final String FILE = "content://io.github.aureliomo.prismlock.config/file/";
+    private static final long REFRESH_INTERVAL_MS = 2_000L;
 
-    private static volatile int size = Icons.DEF_SIZE;
-    private static volatile int stroke10 = Icons.DEF_STROKE10;
-    private static volatile String darkKind = "", lightKind = "";
-    private static volatile byte[] darkData, lightData;
-    private static volatile boolean enabled;
-    private static volatile byte[] catalogIcon, catalogIconLight, catalogIconAod, catalogAnimation;
-    private static long ver = -1;
-    private static long lastRead = 0;
+    private static volatile RuntimeConfig config = RuntimeConfig.EMPTY;
+    private static long lastRead;
     private static final Set<String> loggedAssets = ConcurrentHashMap.newKeySet();
 
-    private static byte[] readAll(Context c, String slot) {
-        try (InputStream in = c.getContentResolver().openInputStream(Uri.parse(FILE + slot))) {
-            if (in == null) return null;
-            ByteArrayOutputStream bo = new ByteArrayOutputStream();
-            byte[] buf = new byte[8192];
-            int n;
-            while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
-            return bo.toByteArray();
-        } catch (Throwable t) {
-            XposedBridge.log("PrismLock: error reading " + slot + ": " + t);
+    private static byte[] readAll(Context context, String slot) {
+        try (InputStream input = context.getContentResolver().openInputStream(Uri.parse(FILE + slot))) {
+            if (input == null) return null;
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = input.read(buffer)) > 0) output.write(buffer, 0, count);
+            return output.toByteArray();
+        } catch (Throwable throwable) {
+            XposedBridge.log("PrismLock: error reading " + slot + ": " + throwable);
             return null;
         }
     }
 
     private static synchronized void refreshConfig() {
         long now = SystemClock.elapsedRealtime();
-        if (now - lastRead < 3000) return;
+        if (now - lastRead < REFRESH_INTERVAL_MS) return;
         lastRead = now;
         try {
-            Context c = AndroidAppHelper.currentApplication();
-            if (c == null) return;
-            Cursor cur = c.getContentResolver().query(CFG, null, null, null, null);
-            if (cur == null) return;
+            Context app = AndroidAppHelper.currentApplication();
+            if (app == null) return;
+            Cursor cursor = app.getContentResolver().query(CFG, null, null, null, null);
+            if (cursor == null) return;
             try {
-                if (!cur.moveToFirst()) return;
-                int nextSize = cur.getInt(0);
-                String dk = cur.getString(2), lk = cur.getString(3);
-                long v = cur.getLong(4);
-                if (v != ver) {
-                    enabled = false;
-                    byte[] nextIcon = null, nextAnimation = null;
-                    String icon = cur.getString(6), animation = cur.getString(7);
-                    if (icon != null && !icon.isEmpty()) nextIcon = Catalog.selected(c.createPackageContext("io.github.aureliomo.prismlock", 0), "icons", icon, nextSize);
-                    Context catalogContext = c.createPackageContext("io.github.aureliomo.prismlock", 0);
-                    byte[] nextLight = nextIcon == null ? null : Catalog.selected(catalogContext, "icons", Catalog.iconTag(catalogContext, icon, "light"), nextSize);
-                    byte[] nextAod = nextIcon == null ? null : Catalog.selected(catalogContext, "icons", Catalog.iconTag(catalogContext, icon, "aod"), nextSize);
-                    if (animation != null && !animation.isEmpty()) nextAnimation = Catalog.selected(c.createPackageContext("io.github.aureliomo.prismlock", 0), "animations", animation, 72);
-                    size = nextSize;
-                    stroke10 = cur.getInt(1);
-                    enabled = cur.getInt(5) == 1;
-                    catalogIcon = nextIcon;
-                    catalogIconLight = nextLight;
-                    catalogIconAod = nextAod;
-                    catalogAnimation = nextAnimation;
-                    darkKind = dk == null ? "" : dk;
-                    lightKind = lk == null ? "" : lk;
-                    darkData = darkKind.isEmpty() ? null : readAll(c, "dark");
-                    lightData = lightKind.isEmpty() ? null : readAll(c, "light");
-                    ver = v;
-                    XposedBridge.log("PrismLock: config size=" + size + " stroke10=" + stroke10
-                            + " dark=" + darkKind + " light=" + lightKind);
-                }
+                if (!cursor.moveToFirst()) return;
+                long version = cursor.getLong(4);
+                if (version == config.versionCode) return;
+                RuntimeConfig next = load(app, cursor, version);
+                config = next;
+                XposedBridge.log("PrismLock: config size=" + next.size + " stroke10=" + next.stroke10
+                        + " dark=" + next.darkKind + " light=" + next.lightKind
+                        + " enabled=" + next.enabled);
             } finally {
-                cur.close();
+                cursor.close();
             }
-        } catch (Throwable t) {
-            XposedBridge.log("PrismLock: configuration unavailable (" + t + ")");
+        } catch (Throwable throwable) {
+            // Keep the last known-good snapshot instead of silently disabling the module.
+            XposedBridge.log("PrismLock: configuration unavailable (" + throwable + ")");
+        }
+    }
+
+    private static RuntimeConfig load(Context app, Cursor cursor, long version) {
+        int size = cursor.getInt(0);
+        int stroke10 = cursor.getInt(1);
+        String darkKind = cursor.getString(2);
+        String lightKind = cursor.getString(3);
+        boolean enabled = cursor.getInt(5) == 1;
+        String iconTag = cursor.getString(6);
+        String animationTag = cursor.getString(7);
+
+        byte[] icon = null, iconLight = null, iconAod = null, animation = null;
+        try {
+            Context module = app.createPackageContext(BuildConfig.APPLICATION_ID, 0);
+            if (iconTag != null && !iconTag.isEmpty()) {
+                icon = selected(module, "icons", iconTag, size);
+                iconLight = selected(module, "icons", Catalog.iconTag(module, iconTag, "light"), size);
+                iconAod = selected(module, "icons", Catalog.iconTag(module, iconTag, "aod"), size);
+            }
+            if (animationTag != null && !animationTag.isEmpty()) {
+                animation = selected(module, "animations", animationTag, 72);
+            }
+        } catch (Throwable throwable) {
+            XposedBridge.log("PrismLock: catalog artwork unavailable (" + throwable + ")");
+        }
+
+        byte[] darkData = darkKind == null || darkKind.isEmpty() ? null : readAll(app, "dark");
+        byte[] lightData = lightKind == null || lightKind.isEmpty() ? null : readAll(app, "light");
+        return RuntimeConfig.create(version, size, stroke10, enabled,
+                darkKind, lightKind, darkData, lightData, icon, iconLight, iconAod, animation);
+    }
+
+    private static byte[] selected(Context module, String kind, String tag, int size) {
+        try {
+            return Catalog.selected(module, kind, tag, size);
+        } catch (Throwable throwable) {
+            XposedBridge.log("PrismLock: cannot load " + kind + "_" + tag + " (" + throwable + ")");
+            return null;
         }
     }
 
     @Override
-    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-        if (!TARGET.equals(lpparam.packageName)) return;
+    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam parameter) {
+        if (!TARGET.equals(parameter.packageName)) return;
 
         try {
             XposedHelpers.findAndHookMethod("com.samsung.android.biometrics.app.setting.Utils",
-                    lpparam.classLoader, "readFile", File.class, new XC_MethodHook() {
+                    parameter.classLoader, "readFile", File.class, new XC_MethodHook() {
                         @Override protected void beforeHookedMethod(MethodHookParam param) {
                             File file = (File) param.args[0];
                             if (file == null || !"user_fingerprint_touch_effect.json".equals(file.getName())) return;
                             refreshConfig();
-                            if (enabled && catalogAnimation != null) {
-                                param.setResult(catalogAnimation);
-                                if (loggedAssets.add("custom-touch-json")) XposedBridge.log("PrismLock: using Samsung custom touch JSON path");
+                            RuntimeConfig snapshot = config;
+                            if (snapshot.enabled && snapshot.animation != null) {
+                                param.setResult(snapshot.animation);
+                                if (loggedAssets.add("custom-touch-json")) {
+                                    XposedBridge.log("PrismLock: using Samsung custom touch JSON path");
+                                }
                             }
                         }
                     });
@@ -128,14 +151,15 @@ public class Hook implements IXposedHookLoadPackage {
                             String path = (String) param.args[0];
                             if (path == null || !"user_fingerprint_touch_effect.png".equals(new File(path).getName())) return;
                             refreshConfig();
-                            if (enabled && catalogAnimation != null) param.setResult(null);
+                            RuntimeConfig snapshot = config;
+                            if (snapshot.enabled && snapshot.animation != null) param.setResult(null);
                         }
                     });
         } catch (Throwable throwable) {
             XposedBridge.log("PrismLock: theme PNG fallback unavailable: " + throwable);
         }
 
-        XC_MethodHook hook = new XC_MethodHook() {
+        XC_MethodHook assetHook = new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
                 try {
@@ -145,44 +169,34 @@ public class Hook implements IXposedHookLoadPackage {
                     boolean touchEffect = AssetPolicy.isTouchEffect(name);
                     if (!AssetPolicy.isIcon(name) && !touchEffect) return;
                     refreshConfig();
-                    if (!enabled) return;
+                    RuntimeConfig snapshot = config;
+                    if (!snapshot.enabled) return;
 
                     boolean light = name.contains("light");
-                    byte[] data;
-                    String kind;
-                    if (light && lightData != null) { data = lightData; kind = lightKind; }
-                    else { data = darkData; kind = darkKind; }
-
-                    byte[] out = null;
+                    byte[] output;
                     if (touchEffect) {
-                        if (catalogAnimation == null) return;
-                        out = catalogAnimation;
-                    } else if (data != null) {
-                        out = "png".equals(kind)
-                                ? Icons.imageLottie(data, size).getBytes(StandardCharsets.UTF_8)
-                                : data;
-                    } else if (catalogIcon != null) {
-                        out = name.contains("aod") ? catalogIconAod : light ? catalogIconLight : catalogIcon;
+                        output = snapshot.animation;
                     } else {
-                        return;
+                        byte[] imported = snapshot.imported(light);
+                        output = imported != null ? imported
+                                : snapshot.iconFor(light, name.contains("aod"));
                     }
-                    if (out != null) {
+                    if (output != null) {
                         if (loggedAssets.add(name)) XposedBridge.log("PrismLock: replacing " + name);
-                        param.setResult(new ByteArrayInputStream(out));
+                        param.setResult(new ByteArrayInputStream(output));
                     }
-                } catch (Throwable t) {
-                    XposedBridge.log("PrismLock: " + t);
+                } catch (Throwable throwable) {
+                    XposedBridge.log("PrismLock: " + throwable);
                 }
             }
         };
 
         try {
-            XposedHelpers.findAndHookMethod(AssetManager.class, "open", String.class, hook);
-            XposedHelpers.findAndHookMethod(AssetManager.class, "open", String.class, int.class, hook);
+            XposedHelpers.findAndHookMethod(AssetManager.class, "open", String.class, assetHook);
+            XposedHelpers.findAndHookMethod(AssetManager.class, "open", String.class, int.class, assetHook);
             XposedBridge.log("PrismLock: hook active in " + TARGET);
-        } catch (Throwable t) {
-            XposedBridge.log("PrismLock: hook failed: " + t);
+        } catch (Throwable throwable) {
+            XposedBridge.log("PrismLock: hook failed: " + throwable);
         }
     }
-
 }

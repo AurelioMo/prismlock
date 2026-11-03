@@ -17,6 +17,7 @@ import android.util.Base64;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,6 +39,7 @@ public class MainActivity extends Activity {
     private int size;
     private Preview fingerprintPreview, effectPreview;
     private CatalogScreen catalogScreen;
+    private TextView updateDetail;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -113,9 +115,12 @@ public class MainActivity extends Activity {
                         }).show());
         LinearLayout other = screen.group(settings, "App");
         screen.settingAction(other, "Preview", "Your fingerprint and touch effect.", this::showPreview);
+        updateDetail = screen.settingValue(other, "Updates", "Checking\u2026",
+                () -> checkForUpdates(true));
         screen.settingValue(other, "About this app", BuildConfig.VERSION_NAME, this::showAbout);
         screen.setSettings(settings);
         refresh();
+        checkForUpdates(false);
     }
 
     @Override
@@ -135,10 +140,116 @@ public class MainActivity extends Activity {
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/AurelioMo"))));
         catalogScreen.settingValue(body, "Repository", "AurelioMo/prismlock", () ->
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/AurelioMo/prismlock"))));
-        TextView credit = catalogScreen.text("Original catalog by custombeta. Samsung integration researched with RingPrint.\n\nThis is a development preview, not an official Samsung app.", 13, 400, catalogScreen.muted);
+        TextView credit = catalogScreen.text("Original catalog by custombeta. Samsung integration researched with RingPrint.\n\nPrismLock is an independent community project.", 13, 400, catalogScreen.muted);
         credit.setPadding(0, dp(16), 0, 0);
         body.addView(credit);
         new AlertDialog.Builder(this).setView(body).setPositiveButton("Close", null).show();
+    }
+
+    private void checkForUpdates(boolean manual) {
+        if (manual) setUpdateStatus("Checking\u2026");
+        UpdateChecker.check(this, manual, (release, error) -> {
+            if (isFinishing() || isDestroyed()) return;
+            if (error != null) {
+                setUpdateStatus(manual ? "Check failed" : "Tap to check");
+                if (manual) showUpdateError(error);
+                return;
+            }
+            if (release == null) {
+                setUpdateStatus("Up to date");
+                if (manual) toast("PrismLock is up to date.");
+                return;
+            }
+            setUpdateStatus("v" + release.version);
+            String prompted = sp().getString("update_prompted", "");
+            if (manual || !release.version.equals(prompted)) {
+                sp().edit().putString("update_prompted", release.version).apply();
+                showUpdateDialog(release);
+            }
+        });
+    }
+
+    private void setUpdateStatus(String value) {
+        if (updateDetail != null) updateDetail.setText(value);
+    }
+
+    private void showUpdateDialog(UpdateChecker.Release release) {
+        String notes = release.notes == null ? "" : release.notes.trim();
+        if (notes.length() > 900) notes = notes.substring(0, 900).trim() + "\u2026";
+        String message = "Version " + release.version + " is available."
+                + (notes.isEmpty() ? "" : "\n\n" + notes);
+        new AlertDialog.Builder(this)
+                .setTitle("Update available")
+                .setMessage(message)
+                .setNegativeButton("Release page", (dialog, which) -> openReleases())
+                .setNeutralButton("Later", null)
+                .setPositiveButton("Update", (dialog, which) -> startUpdate(release))
+                .show();
+    }
+
+    private void showUpdateError(String detail) {
+        new AlertDialog.Builder(this)
+                .setTitle("Could not check for updates")
+                .setMessage(detail + "\n\nYou can download the latest release from GitHub.")
+                .setNegativeButton("Close", null)
+                .setPositiveButton("Open GitHub", (dialog, which) -> openReleases())
+                .show();
+    }
+
+    private void startUpdate(UpdateChecker.Release release) {
+        LinearLayout body = catalogScreen.column();
+        body.setPadding(dp(24), dp(16), dp(24), dp(8));
+        TextView status = catalogScreen.text("Downloading " + release.version + "\u2026",
+                15, 400, catalogScreen.foreground);
+        ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+        bar.setMax(100);
+        bar.setProgress(0);
+        body.addView(status);
+        LinearLayout.LayoutParams barLayout = new LinearLayout.LayoutParams(-1, dp(24));
+        barLayout.topMargin = dp(12);
+        body.addView(bar, barLayout);
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Updating PrismLock")
+                .setView(body)
+                .setCancelable(false)
+                .create();
+        dialog.show();
+        UpdateInstaller.downloadAndInstall(this, release, new UpdateInstaller.Callback() {
+            @Override public void onProgress(int percent) {
+                if (isFinishing() || isDestroyed()) return;
+                bar.setProgress(percent);
+                status.setText("Downloading " + release.version + "\u2026 " + percent + "%");
+            }
+
+            @Override public void onStatus(String message) {
+                if (isFinishing() || isDestroyed()) return;
+                bar.setIndeterminate(true);
+                status.setText(message);
+            }
+
+            @Override public void onFinished(UpdateInstaller.Result result) {
+                if (isFinishing() || isDestroyed()) return;
+                dialog.dismiss();
+                if (result.success) {
+                    toast(result.message);
+                } else {
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("Update did not finish")
+                            .setMessage(result.message)
+                            .setNegativeButton("Close", null)
+                            .setPositiveButton("Open GitHub", (dialog, which) -> openReleases())
+                            .show();
+                }
+            }
+        });
+    }
+
+    private void openReleases() {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(UpdateChecker.RELEASES_URL)));
+        } catch (Exception exception) {
+            toast("Could not open the browser.");
+        }
     }
 
     private long nextVersion() {

@@ -1,17 +1,15 @@
 package io.github.aureliomo.prismlock;
 
+/** Samsung asset families handled by the module. */
 final class AssetPolicy {
+    private AssetPolicy() {
+    }
+
     static boolean isIcon(String name) {
-        return "ic_fingerprint_aod.json".equals(name)
-                || "ic_fingerprint_dark_theme.json".equals(name)
-                || "ic_fingerprint_dark_theme_non_alpha.json".equals(name)
-                || "ic_fingerprint_light_theme.json".equals(name)
-                || "ic_fingerprint_light_theme_non_alpha.json".equals(name);
+        return name.startsWith("ic_fingerprint_") && name.endsWith(".json");
     }
 
     static boolean isTouchEffect(String name) {
-        return "indisplay_fingerprint_touch_effect_green_circle.json".equals(name)
-                || "indisplay_fingerprint_touch_effect_white_circle.json".equals(name)
-                || "indisplay_fingerprint_touch_effect_ripple.json".equals(name);
+        return name.startsWith("indisplay_fingerprint_touch_effect_") && name.endsWith(".json");
     }
 }
