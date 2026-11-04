@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.2 - 2026-11-03
+
+- Resume the verified update automatically after granting installation permission.
+- Reuse the downloaded APK and recheck its package, version and signer on return.
+- Allow PackageInstaller to deliver its confirmation intent and status through the callback.
+- Open installation confirmation through the foreground activity; queue it until the
+  app returns when the callback arrives in the background.
+- Abandon incomplete installer sessions after errors.
+- Add Android host regression tests for permission resumption and installer callbacks.
+
 ## 1.0.1 - 2026-11-03
 
 - Load custom fingerprint icons with configuration-specific Lottie cache keys so

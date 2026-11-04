@@ -93,3 +93,15 @@ requires the downloaded APK to be signed by the same certificate as the installe
 app. Rooted devices install through `pm install -r`; otherwise the platform
 `PackageInstaller` flow asks for confirmation. Updating keeps the package and its
 settings because every official release uses the same signing key.
+
+If installation permission is missing, the foreground activity opens the app-specific
+unknown-sources settings. A persisted pending-update filename allows resumption after
+activity or process recreation. On return, permission is checked directly and the
+cached APK is verified again before installation, without redownloading it. The
+installer callback uses a mutable PendingIntent targeting the private UpdateReceiver
+so Android can supply status and confirmation extras. The receiver routes confirmation
+through the resumed MainActivity, or queues it until the user returns to the app.
+
+Versions 1.0.0 and 1.0.1 contain the previous updater. If their non-root installer
+callback is stuck, use the release-page download once to install 1.0.2; publishing
+a release cannot repair updater code already running on a phone.

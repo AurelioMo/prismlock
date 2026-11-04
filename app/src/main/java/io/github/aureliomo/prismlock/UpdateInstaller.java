@@ -33,6 +33,8 @@ import java.util.concurrent.TimeUnit;
 /** Downloads, verifies and installs a release APK. */
 final class UpdateInstaller {
     private static final long MAX_APK_BYTES = 200L * 1024L * 1024L;
+    private static final String PENDING_APK = "pending_update_apk";
+    private static final String WAITING_PERMISSION = "update_waiting_permission";
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "prismlock-update");
@@ -51,10 +53,16 @@ final class UpdateInstaller {
     static final class Result {
         final boolean success;
         final String message;
+        final boolean needsPermission;
 
         Result(boolean success, String message) {
+            this(success, message, false);
+        }
+
+        Result(boolean success, String message, boolean needsPermission) {
             this.success = success;
             this.message = message;
+            this.needsPermission = needsPermission;
         }
     }
 
@@ -85,8 +93,7 @@ final class UpdateInstaller {
                             "Follow the system installer to finish updating PrismLock."));
                 }
             } catch (UnknownSourcesException exception) {
-                openUnknownSources(app);
-                postFinished(callback, new Result(false, exception.getMessage()));
+                postFinished(callback, new Result(false, exception.getMessage(), true));
             } catch (Throwable throwable) {
                 postFinished(callback, new Result(false, message(throwable)));
             }
@@ -223,16 +230,19 @@ final class UpdateInstaller {
     }
 
     private static void installWithSession(Context context, File apk) throws Exception {
+        context.getSharedPreferences(MainActivity.PREFS, 0).edit()
+                .putString(PENDING_APK, apk.getName()).commit();
         PackageManager manager = context.getPackageManager();
         if (!manager.canRequestPackageInstalls()) {
             throw new UnknownSourcesException(
-                    "Allow PrismLock to install unknown apps, then tap Update again.");
+                    "Allow PrismLock to install unknown apps, then return to continue the update.");
         }
         PackageInstaller installer = manager.getPackageInstaller();
         PackageInstaller.SessionParams parameters = new PackageInstaller.SessionParams(
                 PackageInstaller.SessionParams.MODE_FULL_INSTALL);
         parameters.setSize(apk.length());
         int sessionId = installer.createSession(parameters);
+        boolean committed = false;
         try (PackageInstaller.Session session = installer.openSession(sessionId)) {
             try (OutputStream output = session.openWrite("base.apk", 0, apk.length());
                     InputStream input = new FileInputStream(apk)) {
@@ -242,20 +252,55 @@ final class UpdateInstaller {
             Intent status = new Intent(context, UpdateReceiver.class)
                     .setAction(UpdateReceiver.ACTION_STATUS);
             PendingIntent pending = PendingIntent.getBroadcast(context, sessionId, status,
-                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                    statusIntentFlags());
             session.commit(pending.getIntentSender());
+            committed = true;
+        } finally {
+            if (!committed) installer.abandonSession(sessionId);
         }
     }
 
-    private static void openUnknownSources(Context context) {
-        MAIN.post(() -> {
+    static int statusIntentFlags() {
+        // PackageInstaller fills EXTRA_STATUS and EXTRA_INTENT into this explicit intent.
+        return PendingIntent.FLAG_UPDATE_CURRENT
+                | (Build.VERSION.SDK_INT >= 31 ? PendingIntent.FLAG_MUTABLE : 0);
+    }
+
+    static Intent unknownSourcesIntent(Context context) {
+        return new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                Uri.parse("package:" + context.getPackageName()));
+    }
+
+    static void waitingForPermission(Context context, boolean waiting) {
+        context.getSharedPreferences(MainActivity.PREFS, 0).edit()
+                .putBoolean(WAITING_PERMISSION, waiting).commit();
+    }
+
+    static boolean takePermissionResume(Context context) {
+        android.content.SharedPreferences preferences = context.getSharedPreferences(MainActivity.PREFS, 0);
+        if (!preferences.getBoolean(WAITING_PERMISSION, false)
+                || !context.getPackageManager().canRequestPackageInstalls()) return false;
+        waitingForPermission(context, false);
+        return true;
+    }
+
+    static void resumeInstall(Context context, Callback callback) {
+        Context app = context.getApplicationContext();
+        EXECUTOR.execute(() -> {
             try {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                        Uri.parse("package:" + context.getPackageName()));
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(intent);
-            } catch (Throwable ignored) {
-                // The error dialog already explains what to enable.
+                String filename = app.getSharedPreferences(MainActivity.PREFS, 0).getString(PENDING_APK, "");
+                if (!filename.matches("prismlock-[a-zA-Z0-9._-]+\\.apk")) {
+                    throw new IOException("No update is ready. Tap Update to download it again.");
+                }
+                File apk = new File(new File(app.getCacheDir(), "updates"), filename);
+                // Recheck package, version and signer after returning from Settings.
+                verify(app, apk);
+                installWithSession(app, apk);
+                postFinished(callback, new Result(true, "Follow the system installer to finish updating PrismLock."));
+            } catch (UnknownSourcesException exception) {
+                postFinished(callback, new Result(false, exception.getMessage(), true));
+            } catch (Throwable throwable) {
+                postFinished(callback, new Result(false, message(throwable)));
             }
         });
     }

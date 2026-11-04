@@ -18,11 +18,9 @@ public final class UpdateReceiver extends BroadcastReceiver {
         if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
             Intent confirmation = intent.getParcelableExtra(Intent.EXTRA_INTENT);
             if (confirmation == null) return;
-            confirmation.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            try {
-                context.startActivity(confirmation);
-            } catch (Throwable ignored) {
-                Toast.makeText(context, "Open PrismLock and tap Update again to finish.",
+            // Launch through the visible activity, avoiding background-activity restrictions.
+            if (!MainActivity.deliverInstallConfirmation(confirmation)) {
+                Toast.makeText(context, "Return to PrismLock to confirm the update.",
                         Toast.LENGTH_LONG).show();
             }
         } else if (status == PackageInstaller.STATUS_SUCCESS) {

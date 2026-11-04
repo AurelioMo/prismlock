@@ -29,17 +29,57 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.lang.ref.WeakReference;
 
 public class MainActivity extends Activity {
     static final String PREFS = "cfg";
     private static final int MIN_SIZE = 30;      // seekbar 0..50 -> 30..80
     private static final int MAX_IMPORT = 900 * 1024;
-    private static final int REQ_DARK = 1, REQ_LIGHT = 2;
+    private static final int REQ_DARK = 1, REQ_LIGHT = 2, REQ_INSTALL_PERMISSION = 3;
+    private static WeakReference<MainActivity> foreground = new WeakReference<>(null);
+    private static Intent pendingConfirmation;
 
     private int size;
     private Preview fingerprintPreview, effectPreview;
     private CatalogScreen catalogScreen;
     private TextView updateDetail;
+
+    @Override protected void onResume() {
+        super.onResume();
+        foreground = new WeakReference<>(this);
+        if (pendingConfirmation != null) {
+            Intent confirmation = pendingConfirmation;
+            pendingConfirmation = null;
+            showInstallConfirmation(confirmation);
+        } else if (UpdateInstaller.takePermissionResume(this)) {
+            startUpdate(null);
+        }
+    }
+
+    @Override protected void onPause() {
+        if (foreground.get() == this) foreground.clear();
+        super.onPause();
+    }
+
+    static boolean deliverInstallConfirmation(Intent confirmation) {
+        MainActivity activity = foreground.get();
+        if (activity == null || activity.isFinishing() || activity.isDestroyed()) {
+            pendingConfirmation = confirmation;
+            return false;
+        }
+        activity.showInstallConfirmation(confirmation);
+        return true;
+    }
+
+    private void showInstallConfirmation(Intent confirmation) {
+        try {
+            startActivity(confirmation);
+        } catch (Exception exception) {
+            new AlertDialog.Builder(this).setTitle("Could not open installer")
+                    .setMessage("Return to Updates and try again. " + exception.getMessage())
+                    .setPositiveButton("Close", null).show();
+        }
+    }
 
     @Override
     protected void onCreate(Bundle state) {
@@ -199,7 +239,8 @@ public class MainActivity extends Activity {
     private void startUpdate(UpdateChecker.Release release) {
         LinearLayout body = catalogScreen.column();
         body.setPadding(dp(24), dp(16), dp(24), dp(8));
-        TextView status = catalogScreen.text("Downloading " + release.version + "\u2026",
+        TextView status = catalogScreen.text(release == null ? "Opening the system installer\u2026"
+                : "Downloading " + release.version + "\u2026",
                 15, 400, catalogScreen.foreground);
         ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         bar.setMax(100);
@@ -214,11 +255,11 @@ public class MainActivity extends Activity {
                 .setCancelable(false)
                 .create();
         dialog.show();
-        UpdateInstaller.downloadAndInstall(this, release, new UpdateInstaller.Callback() {
+        UpdateInstaller.Callback callback = new UpdateInstaller.Callback() {
             @Override public void onProgress(int percent) {
                 if (isFinishing() || isDestroyed()) return;
                 bar.setProgress(percent);
-                status.setText("Downloading " + release.version + "\u2026 " + percent + "%");
+                status.setText("Downloading update\u2026 " + percent + "%");
             }
 
             @Override public void onStatus(String message) {
@@ -230,7 +271,16 @@ public class MainActivity extends Activity {
             @Override public void onFinished(UpdateInstaller.Result result) {
                 if (isFinishing() || isDestroyed()) return;
                 dialog.dismiss();
-                if (result.success) {
+                if (result.needsPermission) {
+                    UpdateInstaller.waitingForPermission(MainActivity.this, true);
+                    try {
+                        startActivityForResult(UpdateInstaller.unknownSourcesIntent(MainActivity.this),
+                                REQ_INSTALL_PERMISSION);
+                    } catch (Exception exception) {
+                        UpdateInstaller.waitingForPermission(MainActivity.this, false);
+                        toast("Open Settings and allow PrismLock to install unknown apps, then retry Update.");
+                    }
+                } else if (result.success) {
                     toast(result.message);
                 } else {
                     new AlertDialog.Builder(MainActivity.this)
@@ -241,7 +291,9 @@ public class MainActivity extends Activity {
                             .show();
                 }
             }
-        });
+        };
+        if (release == null) UpdateInstaller.resumeInstall(this, callback);
+        else UpdateInstaller.downloadAndInstall(this, release, callback);
     }
 
     private void openReleases() {
@@ -281,6 +333,15 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int req, int res, Intent data) {
         super.onActivityResult(req, res, data);
+        if (req == REQ_INSTALL_PERMISSION) {
+            // Settings may return RESULT_CANCELED even when the permission was granted.
+            // onResume checks the permission itself and consumes the pending update once.
+            if (!getPackageManager().canRequestPackageInstalls()) {
+                UpdateInstaller.waitingForPermission(this, false);
+                toast("Installation permission was not granted. Tap Update to try again.");
+            }
+            return;
+        }
         if (res != RESULT_OK || data == null || data.getData() == null) return;
         if (req == REQ_DARK) importUri(data.getData(), "dark");
         else if (req == REQ_LIGHT) importUri(data.getData(), "light");

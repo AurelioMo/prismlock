@@ -10,6 +10,7 @@ or manipulate brightness controls as part of validation.
 python3 scripts/check_catalog.py
 python3 scripts/check_icon_loader.py
 ./gradlew --no-daemon assembleDebug
+./gradlew --no-daemon testDebugUnitTest
 apksigner verify app/build/outputs/apk/debug/app-debug.apk
 zipalign -c -P 16 4 app/build/outputs/apk/debug/app-debug.apk
 ```
@@ -20,6 +21,10 @@ The icon-loader regression check requires `ANDROID_HOME` and Java 17. It exercis
 the production hook against simulated Samsung/Xposed boundaries: stock and previous
 icon caches, light/AOD variants, imported artwork, color-filter scope, disable/fallback,
 and keyguard refresh. It does not establish device rendering compatibility.
+The Gradle update-flow tests use Robolectric on API 31 and 36 and require Java 21.
+They cover one-shot permission resumption, denial, mutable status/confirmation delivery
+with the old immutable callback as a negative control, and foreground/background
+confirmation routing. These are simulated Android tests, not physical-device tests.
 
 ## On-device checks
 
@@ -42,6 +47,12 @@ and keyguard refresh. It does not establish device rendering compatibility.
 - Open **Settings → App → Updates** and confirm the update status is shown.
 - Publish a test release with a higher version code and confirm the updater offers it,
   verifies the signing certificate and preserves settings after installing.
+- Without root installation permission, revoke the unknown-sources permission for
+  PrismLock. Start an update, grant permission, and return: the cached APK should
+  resume installation without a second download or Update tap. Repeat with permission
+  denied and with the app recreated while Settings is open. Verify the system
+  confirmation appears while the app is foregrounded, and waits until app return if
+  its callback arrives in the background. Cancel installation and retry normally.
 
 Record device model, Android/One UI versions, LSPosed version and app version for any
 failure report. Never commit private screenshots, raw device logs or firmware dumps.
