@@ -49,6 +49,15 @@ to stock resources. Configuration refreshes are throttled to two seconds.
 
 ## Runtime configuration
 
+On supported Samsung Lottie builds, the icon hook intercepts
+`LottieAnimationView.setAnimation(String)` before the filename-only composition cache.
+Custom JSON uses a cache key containing the module version, configuration revision
+and original asset path. The icon drawable suppresses Samsung's stock color-filter
+callbacks while custom artwork is selected. Stock icons and touch-effect drawables
+retain normal filtering. The keyguard refreshes its current icon when the configuration
+revision changes, even if Samsung's theme filename remains the same. Missing optional
+Lottie APIs are logged and the original asset replacement remains available.
+
 `Hook.refreshConfig()` builds a complete `RuntimeConfig` before publishing it through
 a volatile field. Samsung often reads several assets in quick succession, so a failed
 or partial refresh keeps the last known-good snapshot instead of exposing half-loaded

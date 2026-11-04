@@ -36,5 +36,7 @@ jobs:
         run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
       - name: Validate catalog
         run: python3 scripts/check_catalog.py
+      - name: Check fingerprint loading regressions
+        run: python3 scripts/check_icon_loader.py
       - name: Assemble development APK
         run: ./gradlew --no-daemon assembleDebug

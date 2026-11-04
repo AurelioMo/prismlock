@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.1 - 2026-11-03
+
+- Load custom fingerprint icons with configuration-specific Lottie cache keys so
+  cached stock or previously selected artwork cannot bypass the selected icon.
+- Preserve custom icon colors when Samsung applies its stock fingerprint tint.
+- Add explicit light/AOD variants for AOSP and OxygenOS, and make AOSP visible on dark backgrounds.
+- Refresh the keyguard icon on configuration changes even when its theme is unchanged.
+- Retain the asset hook as a fallback; touch effects use their existing path.
+- Device verification on the reported S26 Ultra remains pending.
+
 ## 1.0.0 - 2026-11-03
 
 - Promote PrismLock to the stable 1.0.0 release.

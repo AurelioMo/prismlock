@@ -7,6 +7,10 @@
       "frames": 1,
       "source": [
         "res/S9.webp"
+      ],
+      "variants": [
+        "light",
+        "aod"
       ]
     },
     {
@@ -127,6 +131,10 @@
       "frames": 1,
       "source": [
         "res/4v.webp"
+      ],
+      "variants": [
+        "light",
+        "aod"
       ]
     },
     {

@@ -39,6 +39,80 @@ public class Hook implements IXposedHookLoadPackage {
     private static volatile RuntimeConfig config = RuntimeConfig.EMPTY;
     private static long lastRead;
     private static final Set<String> loggedAssets = ConcurrentHashMap.newKeySet();
+    private static final String CUSTOM_ICON = BuildConfig.APPLICATION_ID + ".customIcon";
+    private static final String ICON_VERSION = BuildConfig.APPLICATION_ID + ".iconVersion";
+
+    private static byte[] iconPayload(RuntimeConfig snapshot, String name) {
+        boolean light = name.contains("light");
+        byte[] imported = snapshot.imported(light);
+        return imported != null ? imported : snapshot.iconFor(light, name.contains("aod"));
+    }
+
+    /** Load selected icons before Lottie's filename cache can bypass AssetManager.open(). */
+    private static void installIconLoader(ClassLoader loader) {
+        try {
+            Class<?> view = XposedHelpers.findClass("com.airbnb.lottie.LottieAnimationView", loader);
+            Class<?> drawable = XposedHelpers.findClass("com.airbnb.lottie.LottieDrawable", loader);
+            Object colorFilter = XposedHelpers.getStaticObjectField(
+                    XposedHelpers.findClass("com.airbnb.lottie.LottieProperty", loader), "COLOR_FILTER");
+            XposedBridge.hookAllMethods(drawable, "addValueCallback", new XC_MethodHook() {
+                @Override protected void beforeHookedMethod(MethodHookParam param) {
+                    if (param.args.length == 3 && param.args[1] == colorFilter
+                            && Boolean.TRUE.equals(XposedHelpers.getAdditionalInstanceField(param.thisObject, CUSTOM_ICON))) {
+                        // Samsung tints stock vectors. Embedded custom PNGs already carry their colors.
+                        param.args[2] = null;
+                    }
+                }
+            });
+            XposedHelpers.findAndHookMethod(view, "setAnimation", String.class, new XC_MethodHook() {
+                @Override protected void beforeHookedMethod(MethodHookParam param) {
+                    String path = (String) param.args[0];
+                    if (path == null) return;
+                    String name = path.substring(path.lastIndexOf('/') + 1);
+                    if (!AssetPolicy.isIcon(name)) {
+                        Object image = XposedHelpers.getObjectField(param.thisObject, "lottieDrawable");
+                        XposedHelpers.setAdditionalInstanceField(image, CUSTOM_ICON, false);
+                        return;
+                    }
+                    refreshConfig();
+                    RuntimeConfig snapshot = config;
+                    byte[] output = snapshot.enabled ? iconPayload(snapshot, name) : null;
+                    Object image = XposedHelpers.getObjectField(param.thisObject, "lottieDrawable");
+                    Object previous = XposedHelpers.getAdditionalInstanceField(image, CUSTOM_ICON);
+                    XposedHelpers.setAdditionalInstanceField(image, CUSTOM_ICON, output != null);
+                    if (output == null) return;
+                    try {
+                        XposedHelpers.callMethod(param.thisObject, "setAnimation",
+                                new ByteArrayInputStream(output), IconCache.key(path, snapshot.versionCode));
+                        param.setResult(null);
+                    } catch (Throwable throwable) {
+                        XposedHelpers.setAdditionalInstanceField(image, CUSTOM_ICON, previous);
+                        XposedBridge.log("PrismLock: direct icon load unavailable: " + throwable);
+                        // Retain the AssetManager fallback on other Lottie versions.
+                    }
+                }
+            });
+        } catch (Throwable throwable) {
+            XposedBridge.log("PrismLock: versioned icon loader unavailable: " + throwable);
+        }
+
+        try {
+            XposedHelpers.findAndHookMethod(
+                    "com.samsung.android.biometrics.app.setting.fingerprint.UdfpsKeyguardSensorWindow",
+                    loader, "setAnimationTypeIfNeeded", new XC_MethodHook() {
+                        @Override protected void beforeHookedMethod(MethodHookParam param) {
+                            refreshConfig();
+                            Long previous = (Long) XposedHelpers.getAdditionalInstanceField(param.thisObject, ICON_VERSION);
+                            if (previous != null && previous.longValue() == config.versionCode) return;
+                            // Samsung otherwise skips setAnimation when the theme filename hasn't changed.
+                            XposedHelpers.setObjectField(param.thisObject, "mCurrentAnimationType", null);
+                            XposedHelpers.setAdditionalInstanceField(param.thisObject, ICON_VERSION, config.versionCode);
+                        }
+                    });
+        } catch (Throwable throwable) {
+            XposedBridge.log("PrismLock: keyguard icon refresh unavailable: " + throwable);
+        }
+    }
 
     private static byte[] readAll(Context context, String slot) {
         try (InputStream input = context.getContentResolver().openInputStream(Uri.parse(FILE + slot))) {
@@ -123,6 +197,7 @@ public class Hook implements IXposedHookLoadPackage {
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam parameter) {
         if (!TARGET.equals(parameter.packageName)) return;
+        installIconLoader(parameter.classLoader);
 
         try {
             XposedHelpers.findAndHookMethod("com.samsung.android.biometrics.app.setting.Utils",
@@ -172,14 +247,11 @@ public class Hook implements IXposedHookLoadPackage {
                     RuntimeConfig snapshot = config;
                     if (!snapshot.enabled) return;
 
-                    boolean light = name.contains("light");
                     byte[] output;
                     if (touchEffect) {
                         output = snapshot.animation;
                     } else {
-                        byte[] imported = snapshot.imported(light);
-                        output = imported != null ? imported
-                                : snapshot.iconFor(light, name.contains("aod"));
+                        output = iconPayload(snapshot, name);
                     }
                     if (output != null) {
                         if (loggedAssets.add(name)) XposedBridge.log("PrismLock: replacing " + name);
