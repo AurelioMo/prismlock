@@ -517,7 +517,6 @@ public class MainActivity extends Activity {
                         }
                         next = new PreviewImages(frames, new double[]{bounds.getDouble(0), bounds.getDouble(1),
                                 bounds.getDouble(2), bounds.getDouble(3)}, document.getDouble("fr"));
-                        next.footprint = document.optDouble("catalogFootprint", 132);
                         for (int index = 0; index < frames.length; index++) {
                             next.opacity[index] = document.getJSONArray("layers").getJSONObject(index)
                                     .getJSONObject("ks").getJSONObject("o").optInt("k", 100);
@@ -558,7 +557,6 @@ public class MainActivity extends Activity {
                 double[] bounds = current.bounds;
                 float scale = (float) CatalogScale.percent(category, size, bounds[2] - bounds[0], bounds[3] - bounds[1])
                         / 100f * compositionScale;
-                if ("animations".equals(category)) scale *= Math.max(48, Math.min(132, current.footprint)) / 132f;
                 float centerX = width / 2 - (float) (bounds[0] + bounds[2]) / 2 * scale;
                 float centerY = height / 2 - (float) (bounds[1] + bounds[3]) / 2 * scale;
                 float halfWidth = bitmap.getWidth() * scale / 2, halfHeight = bitmap.getHeight() * scale / 2;
@@ -588,7 +586,6 @@ public class MainActivity extends Activity {
         final double[] bounds;
         final double fps;
         final int[] opacity;
-        double footprint = 132;
 
         PreviewImages(Bitmap[] frames, double[] bounds, double fps) {
             this.frames = frames;

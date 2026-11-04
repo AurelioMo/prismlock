@@ -68,10 +68,10 @@ not on every asset read.
 
 Compositions use a 288-unit canvas. A fingerprint's default visible footprint is
 `size * 4`, with size clamped to 30-80. Shared alpha bounds and adjusted anchors
-compensate for transparent margins without per-frame scale changes. Effects normally
+compensate for transparent margins without per-frame scale changes. Effects
 use 132 units, independently of the fingerprint-size preference.
 
-Aqua declares a 96-unit footprint and 24 frames at 30fps (0.8 seconds). Its final
+Aqua uses 24 frames at 30fps (0.8 seconds). Its final
 four frames fade to zero opacity. The short finite composition completes on Lottie
 end/cancel, so it does not remain on the home screen after unlock.
 

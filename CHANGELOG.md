@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3 - 2026-11-04
+
+- Import 11 ColorOS 17 fingerprint designs and 10 touch effects at 60 fps.
+- Replace matching older artwork while preserving saved selections.
+- Use the same visible footprint for all catalog effects and normalize icons to the selected size.
+
 ## 1.0.2 - 2026-11-03
 
 - Resume the verified update automatically after granting installation permission.

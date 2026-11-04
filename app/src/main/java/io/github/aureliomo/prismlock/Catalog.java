@@ -23,14 +23,24 @@ final class Catalog {
 
     static String title(String tag) {
         if (tag == null || tag.isEmpty()) return "Samsung default";
+        if (tag.startsWith("coloros17_") && tag.length() > "coloros17_".length()) {
+            String name = tag.substring("coloros17_".length()).replace('_', ' ');
+            return "ColorOS 17 · " + name.substring(0, 1).toUpperCase(Locale.ROOT) + name.substring(1);
+        }
         switch (tag) {
             case "aqua": return "Aqua";
-            case "buble": return "Bubble";
+            case "buble": return "ColorOS 17 · Bubble";
             case "aosp": return "AOSP";
             case "bluegradient": return "Blue gradient";
-            case "coloros": return "ColorOS";
-            case "coloros2": return "ColorOS 2";
-            case "coloros3": return "ColorOS 3";
+            case "coloros": return "ColorOS 17 · Ripple";
+            case "coloros2": return "ColorOS 17 · Melodic stream";
+            case "coloros3": return "ColorOS 17 · Fizz";
+            case "flare": return "ColorOS 17 · Flare";
+            case "stardust": return "ColorOS 17 · Stardust";
+            case "swirl": return "ColorOS 17 · Swirl";
+            case "spark": return "ColorOS 17 · Sparks";
+            case "halo": return "ColorOS 17 · Halo";
+            case "ripple": return "ColorOS 17 · Ripple";
             case "miui": return "MIUI";
             case "nothingos": return "Nothing OS";
             case "originos": return "OriginOS";
@@ -72,9 +82,6 @@ final class Catalog {
         JSONArray bounds = composition.getJSONArray("catalogBounds");
         double scale = CatalogScale.percent(kind, size, bounds.getDouble(2) - bounds.getDouble(0),
                 bounds.getDouble(3) - bounds.getDouble(1));
-        if ("animations".equals(kind)) {
-            scale *= Math.max(48, Math.min(132, composition.optDouble("catalogFootprint", 132))) / 132;
-        }
 
         Map<String, JSONObject> byId = new HashMap<>();
         for (int index = 0; index < assets.length(); index++) {

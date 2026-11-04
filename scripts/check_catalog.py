@@ -45,6 +45,7 @@ def check_document(filename, static):
     require(document['w'] == document['h'] == 288, filename + ': invalid canvas')
     require(document['fr'] > 0 and document['op'] > 0, filename + ': invalid timing')
     require(static or document['op'] / document['fr'] <= 1.5, filename + ': effect exceeds 1.5 seconds')
+    require('catalogFootprint' not in document, filename + ': use the shared footprint')
     bounds = document['catalogBounds']
     require(len(bounds) == 4 and bounds[2] > bounds[0] and bounds[3] > bounds[1], filename + ': empty bounds')
     require(document['catalogAlphaThreshold'] in (16, 128), filename + ': invalid alpha threshold')
@@ -90,7 +91,6 @@ def main():
                 require(alternate['source_sha256'] == document['source_sha256'], 'Variant source mismatch')
             if tag == 'aqua' and kind == 'animations':
                 require(document['fr'] == 30 and document['op'] == 24, 'Aqua must last 0.8 seconds')
-                require(document['catalogFootprint'] == 96, 'Aqua footprint regression')
                 require(document['layers'][-1]['ks']['o']['k'] == 0, 'Aqua final frame must be invisible')
                 opacity = [layer['ks']['o']['k'] for layer in document['layers'][-5:]]
                 require(opacity == [100, 75, 50, 25, 0], 'Aqua fade-out regression')
