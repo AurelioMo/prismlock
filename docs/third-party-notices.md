@@ -13,7 +13,7 @@ claim ownership over them or relicense them.
 | Aqua animation | User-supplied `output-onlinegiftools.json` | Supplied for PrismLock. Converted and shortened locally; source hash is in the index. |
 | PrismLock logo | User-supplied generated prism image | Provided as project branding. |
 | Gradle wrapper | Gradle 8.13 generated wrapper | Generated files contain upstream notices; distribution checksum is pinned. |
-| Xposed API | `de.robv.android.xposed:api:82` | Compile-only dependency, not bundled as module implementation. |
+| libxposed API | `io.github.libxposed:api:102.0.0` | Compile-only dependency, not bundled as module implementation. |
 
 Research source APKs, decompiled code and full firmware dumps are not included in
 the repository. Hash references document local inputs without publishing originals.

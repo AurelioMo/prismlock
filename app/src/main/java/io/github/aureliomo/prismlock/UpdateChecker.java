@@ -24,7 +24,6 @@ final class UpdateChecker {
     private static final String LATEST_URL =
             "https://api.github.com/repos/AurelioMo/prismlock/releases/latest";
     private static final String USER_AGENT = "PrismLock/" + BuildConfig.VERSION_NAME;
-    private static final long CHECK_INTERVAL_MS = 6L * 60L * 60L * 1000L;
     private static final int MAX_RESPONSE_BYTES = 1024 * 1024;
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor(runnable -> {
@@ -33,8 +32,12 @@ final class UpdateChecker {
         return thread;
     });
 
+    interface ReleaseSource { Release fetch() throws Exception; }
+    static volatile ReleaseSource source = UpdateChecker::fetch;
+    private static final java.util.List<Callback> waiting = new java.util.ArrayList<>();
+
     interface Callback {
-        /** Called on the main thread. Exactly one of release/error is non-null. */
+        /** Called on the main thread; both values are null when already up to date. */
         void onResult(Release release, String error);
     }
 
@@ -62,31 +65,34 @@ final class UpdateChecker {
     private UpdateChecker() {
     }
 
-    static void check(Context context, boolean force, Callback callback) {
+    /** Every foreground entry checks the network. Concurrent startup/manual requests share one fetch. */
+    static void check(Context context, Callback callback) {
         Context app = context.getApplicationContext();
+        synchronized (waiting) {
+            waiting.add(callback);
+            if (waiting.size() > 1) return;
+        }
         EXECUTOR.execute(() -> {
             Release release = null;
             String error = null;
             SharedPreferences preferences = app.getSharedPreferences(MainActivity.PREFS, Context.MODE_PRIVATE);
             try {
-                long lastAttempt = preferences.getLong("update_last_attempt", 0L);
-                long now = System.currentTimeMillis();
-                if (!force && now - lastAttempt < CHECK_INTERVAL_MS) {
-                    release = cached(preferences);
-                } else {
-                    preferences.edit().putLong("update_last_attempt", now).apply();
-                    release = fetch();
-                    store(preferences, release);
-                }
-            } catch (Throwable throwable) {
+                release = source.fetch();
+                store(preferences, release);
+            } catch (Exception failure) {
                 release = cached(preferences);
-                if (release == null) {
-                    error = message(throwable);
-                }
+                if (release == null) error = message(failure);
             }
             final Release result = release;
             final String failure = error;
-            MAIN.post(() -> callback.onResult(result, failure));
+            MAIN.post(() -> {
+                java.util.List<Callback> callbacks;
+                synchronized (waiting) {
+                    callbacks = new java.util.ArrayList<>(waiting);
+                    waiting.clear();
+                }
+                for (Callback target : callbacks) target.onResult(result, failure);
+            });
         });
     }
 

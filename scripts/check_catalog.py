@@ -102,8 +102,12 @@ def main():
     require({path.name for path in PREVIEWS.iterdir()} == expected_previews, 'Missing or unreferenced previews')
     manifest = (ROOT / 'app/src/main/AndroidManifest.xml').read_text()
     require('io.github.aureliomo.prismlock.config' in manifest, 'Provider identity mismatch')
-    entrypoint = (ROOT / 'app/src/main/assets/xposed_init').read_text().strip()
-    require(entrypoint == 'io.github.aureliomo.prismlock.Hook', 'Xposed entrypoint mismatch')
+    metadata = ROOT / 'app/src/main/resources/META-INF/xposed'
+    require((metadata / 'java_init.list').read_text().strip() == 'io.github.aureliomo.prismlock.Hook', 'Xposed entrypoint mismatch')
+    require((metadata / 'scope.list').read_text().strip() == 'com.samsung.android.biometrics.app.setting', 'Xposed scope mismatch')
+    properties = dict(line.split('=', 1) for line in (metadata / 'module.prop').read_text().splitlines() if line)
+    require(properties['minApiVersion'] == properties['targetApiVersion'] == '102', 'Expected modern API 102')
+    require(not (ROOT / 'app/src/main/assets/xposed_init').exists(), 'Legacy entrypoint must not be packaged')
     print(f'PASS: {count} catalog entries, embedded PNG integrity, variants, timing and package identity')
 
 

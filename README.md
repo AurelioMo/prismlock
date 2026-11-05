@@ -23,13 +23,13 @@ Samsung devices and One UI builds, not only on one model or firmware version.
 Open the newest release, expand **Assets**, and download `PrismLock-*.apk`.
 The source ZIP/TAR files are not installable apps.
 
-Current version: **1.0.3**.
+Current version: **1.0.4**.
 
 ## Compatibility
 
 | Component | Requirements |
 | --- | --- |
-| Module framework | LSPosed with legacy Xposed API 82 support |
+| Module framework | LSPosed / compatible framework with modern libxposed API 102 support |
 | Devices | Samsung One UI with an in-display fingerprint sensor |
 | Android | 8.0 or newer (API 26+) |
 | Module scope | `com.samsung.android.biometrics.app.setting` |
@@ -41,7 +41,10 @@ resources Samsung requests at runtime, so the same APK works across One UI devic
 ## Installation
 
 1. Download and install the APK from **[Releases](https://github.com/AurelioMo/prismlock/releases)**.
-2. Activate **PrismLock** in LSPosed and select only the scope listed above.
+2. Use a framework supporting **libxposed API 102**, activate **PrismLock**, and select only the scope listed above.
+   If upgrading from 1.0.3 or older, recheck module activation after the API migration.
+   Restart the scoped process or reboot so Samsung loads the new module code;
+   an already running legacy process retains its old clipping behavior until restarted.
 3. Follow LSPosed's activation/restart requirements.
 4. Open PrismLock and select a fingerprint and animation. There is no Apply step.
 5. If you use LockStar, turn off its fingerprint effect to avoid overlapping effects.
@@ -51,9 +54,10 @@ before enabling PrismLock. The packages are different and preferences do not mig
 
 ## Updates
 
-PrismLock checks GitHub Releases for stable updates when it opens. When a newer
-version is available, **Settings → App → Updates** shows it and offers a one-tap
-update.
+PrismLock checks GitHub Releases in the background whenever the app enters the
+foreground. A newer stable version is offered directly on the current screen;
+**Settings → App → Updates** also lets you check manually. Concurrent checks share
+one network request, and a failed request can be retried immediately.
 
 The APK is downloaded directly from GitHub and installed in place. Rooted devices use
 a silent `pm install`; otherwise Android's system installer asks for confirmation.
@@ -61,7 +65,7 @@ Your settings and selections are preserved.
 
 ## Features
 
-- Built-in library of **28 fingerprint designs** and **18 touch animations**.
+- Built-in library of **36 fingerprint designs** and **21 touch animations**.
 - Independent fingerprint and effect selection with automatic saving.
 - Color, black/light-mode and white/AOD variants for Prism, Vortex, Orbit and Neon.
 - PNG and Lottie imports for light and dark/AOD modes.
@@ -69,7 +73,10 @@ Your settings and selections are preserved.
 - English interface with system, light and dark appearance.
 - Smaller **0.8-second Aqua effect** with a transparent final frame.
 - Customization switch to pass through to Samsung's default visual resources.
-- In-app GitHub update checker and installer.
+- Modern libxposed API 102 integration with background configuration loading.
+- Recycled catalog rows and asynchronous thumbnail/wallpaper loading.
+- Enlarged icon glows can extend beyond the Lottie artboard on compatible Samsung renderers.
+- In-app GitHub update checker and installer, with automatic foreground checks.
 
 The module changes visual resources only. It does not change authentication,
 enrollment, illumination masks, brightness control or sensor behavior.
@@ -82,7 +89,7 @@ enrollment, illumination masks, brightness control or sensor behavior.
 
 ## Source and build
 
-Requires JDK 17, Android SDK platform 36 and Python 3.10+ for catalog validation.
+Requires JDK 21, Android SDK platform 36 and Python 3.10+ for catalog validation.
 Gradle 8.13 is pinned in the checked-in wrapper.
 
 ```sh

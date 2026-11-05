@@ -2,14 +2,7 @@ package io.github.aureliomo.prismlock;
 
 import android.app.Activity;
 import android.content.res.ColorStateList;
-import android.content.res.Configuration;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.ColorFilter;
-import android.graphics.Paint;
-import android.graphics.Path;
-import android.graphics.PixelFormat;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -25,7 +18,9 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import java.io.InputStream;
+import android.widget.ListView;
+import android.widget.BaseAdapter;
+import java.util.ArrayList;
 import java.util.List;
 
 final class CatalogScreen {
@@ -42,6 +37,8 @@ final class CatalogScreen {
     private final LinearLayout content;
     private final TextView title;
     private final ScrollView scroll;
+    private final FrameLayout pages;
+    private final ListView[] collections = new ListView[2];
     private final ImageView importAction;
     private final LinearLayout[] tabs = new LinearLayout[3];
     private LinearLayout settings;
@@ -52,14 +49,11 @@ final class CatalogScreen {
         this.activity = activity;
         this.selectionChanged = selectionChanged;
         selectedTab = Math.max(0, Math.min(2, initialTab));
-        String theme = activity.getSharedPreferences(MainActivity.PREFS, 0).getString("theme", "system");
-        dark = "dark".equals(theme) || ("system".equals(theme)
-                && (activity.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
-                == Configuration.UI_MODE_NIGHT_YES);
+        dark = Appearance.isDark(activity);
         Typeface family = Typeface.createFromAsset(activity.getAssets(), "fonts/OneUISans-VF.ttf");
-        regular = Typeface.create(family, 400, false);
-        medium = Typeface.create(family, 600, false);
-        bold = Typeface.create(family, 700, false);
+        regular = weight(family, 400);
+        medium = weight(family, 600);
+        bold = weight(family, 700);
         foreground = dark ? 0xFFF7F8FC : 0xFF191D25;
         muted = dark ? 0xFFABB3C3 : 0xFF566071;
         accent = dark ? 0xFFA8C8FF : 0xFF185FC1;
@@ -83,7 +77,7 @@ final class CatalogScreen {
 
         FrameLayout frame = new FrameLayout(activity);
         ImageView wallpaper = new ImageView(activity);
-        wallpaper.setImageResource(dark ? R.drawable.catalog_background_dark : R.drawable.catalog_background_light);
+        WallpaperLoader.load(activity, wallpaper, dark);
         wallpaper.setScaleType(ImageView.ScaleType.CENTER_CROP);
         wallpaper.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         frame.addView(wallpaper, new FrameLayout.LayoutParams(-1, -1));
@@ -118,7 +112,7 @@ final class CatalogScreen {
         LinearLayout document = column();
         document.setPadding(0, 0, 0, dp(16));
         title = text("", 32, 700, foreground);
-        title.setAccessibilityHeading(true);
+        heading(title);
         title.setPadding(dp(8), dp(8), dp(8), dp(16));
         document.addView(title);
         content = column();
@@ -132,7 +126,9 @@ final class CatalogScreen {
         });
         LinearLayout.LayoutParams scrollLayout = new LinearLayout.LayoutParams(-1, 0, 1);
         scrollLayout.setMargins(dp(16), 0, dp(16), dp(12));
-        shell.addView(scroll, scrollLayout);
+        pages = new FrameLayout(activity);
+        pages.addView(scroll, new FrameLayout.LayoutParams(-1, -1));
+        shell.addView(pages, scrollLayout);
 
         LinearLayout navigation = new LinearLayout(activity);
         navigation.setPadding(dp(12), dp(5), dp(12), dp(4));
@@ -154,7 +150,7 @@ final class CatalogScreen {
             tab.addView(label);
             tab.setOnClickListener(view -> {
                 if (selectedTab == destination) return;
-                scrollPositions[selectedTab] = scroll.getScrollY();
+                if (selectedTab == 2) scrollPositions[selectedTab] = scroll.getScrollY();
                 selectedTab = destination;
                 render();
             });
@@ -199,7 +195,7 @@ final class CatalogScreen {
 
     LinearLayout group(LinearLayout parent, String name) {
         TextView heading = text(name, 13, 600, muted);
-        heading.setAccessibilityHeading(true);
+        heading(heading);
         heading.setPadding(dp(12), dp(16), dp(12), dp(10));
         parent.addView(heading);
         LinearLayout group = column();
@@ -300,88 +296,137 @@ final class CatalogScreen {
         for (int index = 0; index < tabs.length; index++) {
             boolean selected = index == selectedTab;
             tabs[index].setSelected(selected);
-            tabs[index].setAccessibilityHeading(false);
             ((ImageView) tabs[index].getChildAt(0)).setImageDrawable(
                     symbol(new String[]{"fingerprint", "animation", "settings"}[index], selected ? foreground : muted));
             ((TextView) tabs[index].getChildAt(1)).setTextColor(selected ? foreground : muted);
             tabs[index].setAlpha(selected ? 1 : 0.7f);
         }
+        scroll.setVisibility(selectedTab == 2 ? View.VISIBLE : View.GONE);
+        for (int i = 0; i < collections.length; i++) {
+            if (collections[i] != null) collections[i].setVisibility(i == selectedTab ? View.VISIBLE : View.GONE);
+        }
         if (selectedTab == 2) {
             if (settings.getParent() instanceof ViewGroup) ((ViewGroup) settings.getParent()).removeView(settings);
             content.addView(settings);
-        } else {
-            renderCatalog();
+            scroll.post(() -> scroll.scrollTo(0, scrollPositions[2]));
+        } else if (collections[selectedTab] == null) {
+            collections[selectedTab] = createCollection(selectedTab);
+            pages.addView(collections[selectedTab], new FrameLayout.LayoutParams(-1, -1));
         }
-        scroll.post(() -> scroll.scrollTo(0, scrollPositions[selectedTab]));
     }
 
-    private void renderCatalog() {
-        String kind = selectedTab == 0 ? "icons" : "animations";
-        String key = selectedTab == 0 ? "icon" : "animation";
-        TextView category = text(selectedTab == 0 ? "Fingerprint collection" : "Touch effects", 13, 600, muted);
+    private ListView createCollection(int tab) {
+        ListView list = new ListView(activity);
+        list.setDivider(null);
+        list.setDividerHeight(0);
+        list.setSelector(android.R.color.transparent);
+        list.setVerticalScrollBarEnabled(false);
+        list.setClipToPadding(false);
+        list.setPadding(0, 0, 0, dp(16));
+        list.setClipToOutline(true);
+        list.setOutlineProvider(scroll.getOutlineProvider());
+        LinearLayout header = column();
+        TextView heading = text(tab == 0 ? "Fingerprints" : "Animations", 32, 700, foreground);
+        heading(heading);
+        heading.setPadding(dp(8), dp(8), dp(8), dp(16));
+        header.addView(heading);
+        TextView category = text(tab == 0 ? "Fingerprint collection" : "Touch effects", 13, 600, muted);
         category.setPadding(dp(12), 0, dp(12), dp(10));
-        content.addView(category);
-        if (selectedTab == 1) {
+        header.addView(category);
+        if (tab == 1) {
             TextView warning = text("Turn off LockStar's fingerprint effect to avoid conflicts.", 13, 400, muted);
             warning.setPadding(dp(12), 0, dp(12), dp(12));
-            content.addView(warning);
+            header.addView(warning);
         }
-        LinearLayout list = column();
-        list.setBackground(round(panel, 24));
-        list.setClipToOutline(true);
-        content.addView(list);
-        try {
-            List<String> tags = Catalog.tags(activity, kind);
-            tags.add(0, "");
-            String selected = activity.getSharedPreferences(MainActivity.PREFS, 0).getString(key, "");
-            for (String tag : tags) {
-                boolean checked = tag.equals(selected);
-                LinearLayout row = new LinearLayout(activity);
-                row.setGravity(Gravity.CENTER_VERTICAL);
-                row.setPadding(dp(16), dp(12), dp(16), dp(12));
-                row.setMinimumHeight(dp(76));
-                row.setBackground(ripple(Color.TRANSPARENT, 0));
-                ImageView thumbnail = new ImageView(activity);
-                thumbnail.setBackground(round(dark ? 0xFF3B4049 : 0xFFE6EBF2, 14));
-                thumbnail.setPadding(dp(4), dp(4), dp(4), dp(4));
-                thumbnail.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                if (tag.isEmpty()) {
-                    thumbnail.setImageDrawable(symbol(selectedTab == 0 ? "fingerprint" : "animation", foreground));
-                    thumbnail.setPadding(dp(9), dp(9), dp(9), dp(9));
-                } else {
-                    try (InputStream input = activity.getAssets().open("previews/" + kind + "_" + tag + ".png")) {
-                        thumbnail.setImageBitmap(BitmapFactory.decodeStream(input));
-                    }
-                }
-                thumbnail.setClipToOutline(true);
-                row.addView(thumbnail, new LinearLayout.LayoutParams(dp(44), dp(44)));
-                String name = tag.isEmpty() ? "Samsung default" : Catalog.title(tag);
-                TextView label = text(name,
-                        16, 600, foreground);
-                label.setPadding(dp(14), 0, dp(4), 0);
-                row.addView(label, new LinearLayout.LayoutParams(0, -2, 1));
-                if (checked) {
-                    ImageView check = new ImageView(activity);
-                    check.setImageDrawable(symbol("check", accent));
-                    row.addView(check, new LinearLayout.LayoutParams(dp(19), dp(19)));
-                }
-                row.setSelected(checked);
-                row.setContentDescription(name + (checked ? ", selected" : ""));
-                row.setOnClickListener(view -> {
-                    activity.getSharedPreferences(MainActivity.PREFS, 0).edit().putString(key, tag)
-                            .putLong("ver", Math.max(System.currentTimeMillis(),
-                                    activity.getSharedPreferences(MainActivity.PREFS, 0).getLong("ver", 0) + 1)).commit();
-                    selectionChanged.run();
-                    scrollPositions[selectedTab] = scroll.getScrollY();
-                    render();
-                });
-                list.addView(row);
+        list.addHeaderView(header, null, false);
+        CatalogAdapter adapter = new CatalogAdapter(tab);
+        list.setAdapter(adapter);
+        list.setOnItemClickListener((parent, view, position, id) -> {
+            int index = position - list.getHeaderViewsCount();
+            if (index < 0 || index >= adapter.getCount()) return;
+            String tag = adapter.tags.get(index);
+            SettingsStore.select(activity.getSharedPreferences(MainActivity.PREFS, 0), adapter.key, tag);
+            adapter.selected = tag;
+            adapter.notifyDataSetChanged();
+            UiMotion.settle(((Row) view).thumbnail);
+            selectionChanged.run();
+        });
+        return list;
+    }
+
+    private final class CatalogAdapter extends BaseAdapter {
+        final List<String> tags = new ArrayList<>();
+        final String kind, key;
+        String selected;
+        CatalogAdapter(int tab) {
+            kind = tab == 0 ? "icons" : "animations";
+            key = tab == 0 ? "icon" : "animation";
+            selected = activity.getSharedPreferences(MainActivity.PREFS, 0).getString(key, "");
+            tags.add("");
+            try { tags.addAll(Catalog.tags(activity, kind)); }
+            catch (Exception failure) {
+                android.widget.Toast.makeText(activity, "Could not load the collection. Reopen the app to try again.",
+                        android.widget.Toast.LENGTH_LONG).show();
             }
-        } catch (Exception exception) {
-            TextView error = text("Could not load the collection. Reopen the app to try again.", 15, 400, foreground);
-            error.setPadding(dp(20), dp(20), dp(20), dp(20));
-            list.addView(error);
         }
+        @Override public int getCount() { return tags.size(); }
+        @Override public Object getItem(int position) { return tags.get(position); }
+        @Override public long getItemId(int position) { return position; }
+        @Override public boolean hasStableIds() { return true; }
+        @Override public View getView(int position, View recycled, ViewGroup parent) {
+            Row row = recycled instanceof Row ? (Row) recycled : new Row();
+            String tag = tags.get(position);
+            boolean checked = tag.equals(selected);
+            String name = tag.isEmpty() ? "Samsung default" : Catalog.title(tag);
+            row.label.setText(name);
+            row.check.setVisibility(checked ? View.VISIBLE : View.INVISIBLE);
+            row.setSelected(checked);
+            row.setContentDescription(name + (checked ? ", selected" : ""));
+            float top = position == 0 ? dp(24) : 0, bottom = position == getCount() - 1 ? dp(24) : 0;
+            GradientDrawable background = new GradientDrawable();
+            background.setColor(panel);
+            background.setCornerRadii(new float[]{top, top, top, top, bottom, bottom, bottom, bottom});
+            row.setBackground(background);
+            if (tag.isEmpty()) {
+                row.thumbnail.setTag(null);
+                row.thumbnail.setImageDrawable(symbol("icons".equals(kind) ? "fingerprint" : "animation", foreground));
+                row.thumbnail.setPadding(dp(9), dp(9), dp(9), dp(9));
+            } else {
+                row.thumbnail.setPadding(dp(4), dp(4), dp(4), dp(4));
+                ThumbnailLoader.load(activity, "previews/" + kind + "_" + tag + ".png", row.thumbnail, dp(36));
+            }
+            return row;
+        }
+    }
+
+    private final class Row extends LinearLayout {
+        final ImageView thumbnail = new ImageView(activity);
+        final TextView label = text("", 16, 600, foreground);
+        final ImageView check = new ImageView(activity);
+        Row() {
+            super(activity);
+            setGravity(Gravity.CENTER_VERTICAL);
+            setPadding(dp(16), dp(12), dp(16), dp(12));
+            setMinimumHeight(dp(76));
+            setForeground(ripple(Color.TRANSPARENT, 0));
+            thumbnail.setBackground(round(dark ? 0xFF3B4049 : 0xFFE6EBF2, 14));
+            thumbnail.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            thumbnail.setClipToOutline(true);
+            addView(thumbnail, new LinearLayout.LayoutParams(dp(44), dp(44)));
+            label.setPadding(dp(14), 0, dp(4), 0);
+            addView(label, new LinearLayout.LayoutParams(0, -2, 1));
+            check.setImageDrawable(symbol("check", accent));
+            addView(check, new LinearLayout.LayoutParams(dp(19), dp(19)));
+        }
+    }
+
+    private static Typeface weight(Typeface family, int weight) {
+        return android.os.Build.VERSION.SDK_INT >= 28 ? Typeface.create(family, weight, false)
+                : Typeface.create(family, weight >= 600 ? Typeface.BOLD : Typeface.NORMAL);
+    }
+
+    private static void heading(View view) {
+        if (android.os.Build.VERSION.SDK_INT >= 28) view.setAccessibilityHeading(true);
     }
 
     private ImageView action(String symbol, String label, Runnable action) {

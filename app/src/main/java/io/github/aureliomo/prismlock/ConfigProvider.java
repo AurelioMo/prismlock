@@ -15,7 +15,16 @@ import java.io.FileNotFoundException;
 
 /** Read-only configuration and image access for the separate biometrics process. */
 public class ConfigProvider extends ContentProvider {
-    @Override public boolean onCreate() { return true; }
+    private SharedPreferences.OnSharedPreferenceChangeListener changes;
+
+    @Override public boolean onCreate() {
+        changes = (preferences, key) -> {
+            if ("ver".equals(key)) getContext().getContentResolver().notifyChange(
+                    Uri.parse("content://io.github.aureliomo.prismlock.config/cfg"), null);
+        };
+        prefs().registerOnSharedPreferenceChangeListener(changes);
+        return true;
+    }
 
     private SharedPreferences prefs() {
         return getContext().getSharedPreferences(MainActivity.PREFS, 0);

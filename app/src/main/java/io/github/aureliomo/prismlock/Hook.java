@@ -1,274 +1,283 @@
 package io.github.aureliomo.prismlock;
 
-import android.app.AndroidAppHelper;
+import android.app.Application;
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.database.ContentObserver;
 import android.database.Cursor;
-import android.net.Uri;
-import android.os.SystemClock;
 import android.graphics.BitmapFactory;
-
+import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
+import android.util.Log;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import io.github.libxposed.api.XposedModule;
 
-import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XposedBridge;
-import de.robv.android.xposed.XposedHelpers;
-import de.robv.android.xposed.callbacks.XC_LoadPackage;
-
-/**
- * Replaces Samsung fingerprint artwork and touch-effect data without changing authentication.
- *
- * <p>The hook mirrors the asset family used by RingPrint: every
- * {@code ic_fingerprint_*.json} and
- * {@code indisplay_fingerprint_touch_effect_*.json} asset is eligible, while the
- * selected artwork decides what is returned. Samsung keeps ownership of timing,
- * authentication and sensor behavior.</p>
- */
-public class Hook implements IXposedHookLoadPackage {
-    private static final String TARGET = "com.samsung.android.biometrics.app.setting";
-    private static final Uri CFG = Uri.parse("content://io.github.aureliomo.prismlock.config/cfg");
+/** API 102 entrypoint. Hooks only visual resources in Samsung's biometrics process. */
+public final class Hook extends XposedModule {
+    static final String TARGET = "com.samsung.android.biometrics.app.setting";
+    static final Uri CFG = Uri.parse("content://io.github.aureliomo.prismlock.config/cfg");
     private static final String FILE = "content://io.github.aureliomo.prismlock.config/file/";
-    private static final long REFRESH_INTERVAL_MS = 2_000L;
+    private final AtomicBoolean installed = new AtomicBoolean();
+    private final AtomicBoolean refreshing = new AtomicBoolean();
+    private final AtomicBoolean dirty = new AtomicBoolean();
+    private final Set<String> logged = ConcurrentHashMap.newKeySet();
+    private final Map<Object, Boolean> customDrawables = Collections.synchronizedMap(new WeakHashMap<>());
+    private final Map<Object, String> iconViews = Collections.synchronizedMap(new WeakHashMap<>());
+    private final Map<Object, Long> windowVersions = Collections.synchronizedMap(new WeakHashMap<>());
+    private final ExecutorService configWorker = Executors.newSingleThreadExecutor(task -> {
+        Thread thread = new Thread(task, "prismlock-config");
+        thread.setDaemon(true);
+        return thread;
+    });
+    private volatile RuntimeConfig config = RuntimeConfig.EMPTY;
+    private volatile Context app;
+    private volatile long lastRead = -2_000;
+    private Handler main;
+    private Method setIcon;
+    private ContentObserver observer;
 
-    private static volatile RuntimeConfig config = RuntimeConfig.EMPTY;
-    private static long lastRead;
-    private static final Set<String> loggedAssets = ConcurrentHashMap.newKeySet();
-    private static final String CUSTOM_ICON = BuildConfig.APPLICATION_ID + ".customIcon";
-    private static final String ICON_VERSION = BuildConfig.APPLICATION_ID + ".iconVersion";
+    @Override public void onPackageReady(PackageReadyParam parameter) {
+        if (!TARGET.equals(parameter.getPackageName()) || !installed.compareAndSet(false, true)) return;
+        main = new Handler(Looper.getMainLooper());
+        ClassLoader loader = parameter.getClassLoader();
+        optional("application context", () -> {
+            Method attach = Application.class.getDeclaredMethod("attach", Context.class);
+            hook(attach).intercept(chain -> {
+                Object result = chain.proceed();
+                attachContext((Context) chain.getThisObject());
+                return result;
+            });
+        });
+        installIconLoader(loader);
+        optional("custom touch JSON", () -> {
+            Method read = Class.forName(TARGET + ".Utils", false, loader).getDeclaredMethod("readFile", File.class);
+            hook(read).intercept(chain -> {
+                File file = (File) chain.getArg(0);
+                if (file != null && "user_fingerprint_touch_effect.json".equals(file.getName())) {
+                    refreshConfig(false);
+                    RuntimeConfig snapshot = config;
+                    if (snapshot.enabled && snapshot.animation != null) return snapshot.animation;
+                }
+                return chain.proceed();
+            });
+        });
+        optional("touch PNG fallback", () -> hook(BitmapFactory.class.getDeclaredMethod("decodeFile", String.class))
+                .intercept(chain -> {
+                    String path = (String) chain.getArg(0);
+                    if (path != null && "user_fingerprint_touch_effect.png".equals(basename(path))) {
+                        refreshConfig(false);
+                        RuntimeConfig snapshot = config;
+                        if (snapshot.enabled && snapshot.animation != null) return null;
+                    }
+                    return chain.proceed();
+                }));
+        for (Class<?>[] signature : new Class<?>[][]{{String.class}, {String.class, int.class}}) {
+            optional("asset loader", () -> hook(AssetManager.class.getDeclaredMethod("open", signature))
+                    .intercept(chain -> {
+                        String name = basename((String) chain.getArg(0));
+                        boolean effect = AssetPolicy.isTouchEffect(name);
+                        if (!effect && !AssetPolicy.isIcon(name)) return chain.proceed();
+                        refreshConfig(false);
+                        RuntimeConfig snapshot = config;
+                        byte[] output = !snapshot.enabled ? null : effect ? snapshot.animation : iconPayload(snapshot, name);
+                        return output == null ? chain.proceed() : new ByteArrayInputStream(output);
+                    }));
+        }
+        log(Log.INFO, "PrismLock", "API 102 hooks installed in " + TARGET);
+    }
 
-    private static byte[] iconPayload(RuntimeConfig snapshot, String name) {
+    private void installIconLoader(ClassLoader loader) {
+        optional("icon loader", () -> {
+            Class<?> view = Class.forName("com.airbnb.lottie.LottieAnimationView", false, loader);
+            Field drawable = field(view, "lottieDrawable");
+            Method stream = view.getMethod("setAnimation", InputStream.class, String.class);
+            setIcon = view.getMethod("setAnimation", String.class);
+            // Resolve method handles once; do not repeat reflection lookup during icon changes.
+            var streamInvoker = getInvoker(stream);
+            hook(setIcon).intercept(chain -> {
+                Object target = chain.getThisObject();
+                String path = (String) chain.getArg(0);
+                if (path == null) return chain.proceed();
+                String name = basename(path);
+                Object image = drawable.get(target);
+                if (!AssetPolicy.isIcon(name)) {
+                    iconViews.remove(target);
+                    customDrawables.remove(image);
+                    IconOverflow.restore(target);
+                    return chain.proceed();
+                }
+                iconViews.put(target, path);
+                refreshConfig(false);
+                RuntimeConfig snapshot = config;
+                byte[] output = snapshot.enabled ? iconPayload(snapshot, name) : null;
+                if (output == null) {
+                    customDrawables.remove(image);
+                    IconOverflow.restore(target);
+                    return chain.proceed();
+                }
+                Boolean previous = customDrawables.put(image, true);
+                try {
+                    streamInvoker.invoke(target, new ByteArrayInputStream(output), IconCache.key(path, snapshot.versionCode));
+                    IconOverflow.allow(target);
+                    return null;
+                } catch (Throwable failure) {
+                    if (previous == null) customDrawables.remove(image);
+                    else customDrawables.put(image, previous);
+                    warnOnce("direct icon load", failure);
+                    return chain.proceed();
+                }
+            });
+        });
+        // A missing optional tint API must not disable the independent icon loader.
+        optional("custom icon tint", () -> {
+            Class<?> drawable = Class.forName("com.airbnb.lottie.LottieDrawable", false, loader);
+            Object color = field(Class.forName("com.airbnb.lottie.LottieProperty", false, loader), "COLOR_FILTER").get(null);
+            for (Method method : drawable.getDeclaredMethods()) {
+                if (!method.getName().equals("addValueCallback") || method.getParameterCount() != 3) continue;
+                hook(method).intercept(chain -> {
+                    if (chain.getArg(1) == color && Boolean.TRUE.equals(customDrawables.get(chain.getThisObject()))) {
+                        return chain.proceed(new Object[]{chain.getArg(0), chain.getArg(1), null});
+                    }
+                    return chain.proceed();
+                });
+            }
+        });
+        optional("keyguard refresh", () -> {
+            Class<?> window = Class.forName(TARGET + ".fingerprint.UdfpsKeyguardSensorWindow", false, loader);
+            Field current = field(window, "mCurrentAnimationType");
+            hook(window.getDeclaredMethod("setAnimationTypeIfNeeded")).intercept(chain -> {
+                refreshConfig(false);
+                long version = config.versionCode;
+                Long previous = windowVersions.put(chain.getThisObject(), version);
+                if (previous == null || previous != version) current.set(chain.getThisObject(), null);
+                return chain.proceed();
+            });
+        });
+    }
+
+    private void attachContext(Context context) {
+        app = context;
+        observer = new ContentObserver(main) {
+            @Override public void onChange(boolean selfChange) { refreshConfig(true); }
+        };
+        try {
+            context.getContentResolver().registerContentObserver(CFG, false, observer);
+        } catch (Exception failure) { warnOnce("configuration observer", failure); }
+        refreshConfig(true);
+    }
+
+    /** Binder IO, asset parsing and image wrapping never run on Samsung's UI thread. */
+    private void refreshConfig(boolean force) {
+        if (app == null) return;
+        if (force) dirty.set(true);
+        if (!dirty.get() && SystemClock.elapsedRealtime() - lastRead < 2_000) return;
+        if (!refreshing.compareAndSet(false, true)) return;
+        configWorker.execute(() -> {
+            try {
+                do {
+                    dirty.set(false);
+                    lastRead = SystemClock.elapsedRealtime();
+                    try (Cursor cursor = app.getContentResolver().query(CFG, null, null, null, null)) {
+                        if (cursor == null || !cursor.moveToFirst() || cursor.getLong(4) == config.versionCode) continue;
+                        RuntimeConfig next = load(app, cursor);
+                        config = next;
+                        main.post(this::reloadIcons);
+                    } catch (Throwable failure) { warnOnce("configuration refresh", failure); }
+                } while (dirty.get());
+            } finally {
+                refreshing.set(false);
+                if (dirty.get()) refreshConfig(true);
+            }
+        });
+    }
+
+    private void reloadIcons() {
+        if (setIcon == null) return;
+        ArrayList<Map.Entry<Object, String>> views;
+        synchronized (iconViews) { views = new ArrayList<>(iconViews.entrySet()); }
+        for (Map.Entry<Object, String> entry : views) {
+            Object view = entry.getKey();
+            if (view == null) continue;
+            try { getInvoker(setIcon).invoke(view, entry.getValue()); }
+            catch (Throwable failure) { warnOnce("visible icon refresh", failure); }
+        }
+    }
+
+    static RuntimeConfig load(Context app, Cursor cursor) throws Exception {
+        long version = cursor.getLong(4);
+        int size = cursor.getInt(0), stroke = cursor.getInt(1);
+        String dark = cursor.getString(2), light = cursor.getString(3);
+        if (cursor.getInt(5) != 1) return RuntimeConfig.create(version, size, stroke, false,
+                dark, light, null, null, null, null, null, null);
+        Context module = app.createPackageContext(BuildConfig.APPLICATION_ID, 0);
+        String tag = cursor.getString(6), effect = cursor.getString(7);
+        byte[] icon = null, iconLight = null, iconAod = null, animation = null;
+        if (tag != null && !tag.isEmpty()) {
+            icon = Catalog.selected(module, "icons", tag, size);
+            String lightTag = Catalog.iconTag(module, tag, "light"), aodTag = Catalog.iconTag(module, tag, "aod");
+            iconLight = tag.equals(lightTag) ? icon : Catalog.selected(module, "icons", lightTag, size);
+            iconAod = tag.equals(aodTag) ? icon : Catalog.selected(module, "icons", aodTag, size);
+        }
+        if (effect != null && !effect.isEmpty()) animation = Catalog.selected(module, "animations", effect, size);
+        return RuntimeConfig.create(version, size, stroke, true, dark, light,
+                imported(app, "dark", dark), imported(app, "light", light), icon, iconLight, iconAod, animation);
+    }
+
+    private static byte[] imported(Context app, String slot, String kind) throws Exception {
+        if (kind == null || kind.isEmpty()) return null;
+        try (InputStream input = app.getContentResolver().openInputStream(Uri.parse(FILE + slot))) {
+            if (input == null) throw new IllegalStateException("Imported artwork unavailable");
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = input.read(buffer)) != -1) {
+                if (output.size() + count > 900 * 1024) throw new IllegalStateException("Imported artwork too large");
+                output.write(buffer, 0, count);
+            }
+            return output.toByteArray();
+        }
+    }
+
+    static byte[] iconPayload(RuntimeConfig snapshot, String name) {
         boolean light = name.contains("light");
         byte[] imported = snapshot.imported(light);
         return imported != null ? imported : snapshot.iconFor(light, name.contains("aod"));
     }
 
-    /** Load selected icons before Lottie's filename cache can bypass AssetManager.open(). */
-    private static void installIconLoader(ClassLoader loader) {
-        try {
-            Class<?> view = XposedHelpers.findClass("com.airbnb.lottie.LottieAnimationView", loader);
-            Class<?> drawable = XposedHelpers.findClass("com.airbnb.lottie.LottieDrawable", loader);
-            Object colorFilter = XposedHelpers.getStaticObjectField(
-                    XposedHelpers.findClass("com.airbnb.lottie.LottieProperty", loader), "COLOR_FILTER");
-            XposedBridge.hookAllMethods(drawable, "addValueCallback", new XC_MethodHook() {
-                @Override protected void beforeHookedMethod(MethodHookParam param) {
-                    if (param.args.length == 3 && param.args[1] == colorFilter
-                            && Boolean.TRUE.equals(XposedHelpers.getAdditionalInstanceField(param.thisObject, CUSTOM_ICON))) {
-                        // Samsung tints stock vectors. Embedded custom PNGs already carry their colors.
-                        param.args[2] = null;
-                    }
-                }
-            });
-            XposedHelpers.findAndHookMethod(view, "setAnimation", String.class, new XC_MethodHook() {
-                @Override protected void beforeHookedMethod(MethodHookParam param) {
-                    String path = (String) param.args[0];
-                    if (path == null) return;
-                    String name = path.substring(path.lastIndexOf('/') + 1);
-                    if (!AssetPolicy.isIcon(name)) {
-                        Object image = XposedHelpers.getObjectField(param.thisObject, "lottieDrawable");
-                        XposedHelpers.setAdditionalInstanceField(image, CUSTOM_ICON, false);
-                        return;
-                    }
-                    refreshConfig();
-                    RuntimeConfig snapshot = config;
-                    byte[] output = snapshot.enabled ? iconPayload(snapshot, name) : null;
-                    Object image = XposedHelpers.getObjectField(param.thisObject, "lottieDrawable");
-                    Object previous = XposedHelpers.getAdditionalInstanceField(image, CUSTOM_ICON);
-                    XposedHelpers.setAdditionalInstanceField(image, CUSTOM_ICON, output != null);
-                    if (output == null) return;
-                    try {
-                        XposedHelpers.callMethod(param.thisObject, "setAnimation",
-                                new ByteArrayInputStream(output), IconCache.key(path, snapshot.versionCode));
-                        param.setResult(null);
-                    } catch (Throwable throwable) {
-                        XposedHelpers.setAdditionalInstanceField(image, CUSTOM_ICON, previous);
-                        XposedBridge.log("PrismLock: direct icon load unavailable: " + throwable);
-                        // Retain the AssetManager fallback on other Lottie versions.
-                    }
-                }
-            });
-        } catch (Throwable throwable) {
-            XposedBridge.log("PrismLock: versioned icon loader unavailable: " + throwable);
-        }
+    private static String basename(String path) { return path == null ? "" : path.substring(path.lastIndexOf('/') + 1); }
 
-        try {
-            XposedHelpers.findAndHookMethod(
-                    "com.samsung.android.biometrics.app.setting.fingerprint.UdfpsKeyguardSensorWindow",
-                    loader, "setAnimationTypeIfNeeded", new XC_MethodHook() {
-                        @Override protected void beforeHookedMethod(MethodHookParam param) {
-                            refreshConfig();
-                            Long previous = (Long) XposedHelpers.getAdditionalInstanceField(param.thisObject, ICON_VERSION);
-                            if (previous != null && previous.longValue() == config.versionCode) return;
-                            // Samsung otherwise skips setAnimation when the theme filename hasn't changed.
-                            XposedHelpers.setObjectField(param.thisObject, "mCurrentAnimationType", null);
-                            XposedHelpers.setAdditionalInstanceField(param.thisObject, ICON_VERSION, config.versionCode);
-                        }
-                    });
-        } catch (Throwable throwable) {
-            XposedBridge.log("PrismLock: keyguard icon refresh unavailable: " + throwable);
-        }
-    }
-
-    private static byte[] readAll(Context context, String slot) {
-        try (InputStream input = context.getContentResolver().openInputStream(Uri.parse(FILE + slot))) {
-            if (input == null) return null;
-            ByteArrayOutputStream output = new ByteArrayOutputStream();
-            byte[] buffer = new byte[8192];
-            int count;
-            while ((count = input.read(buffer)) > 0) output.write(buffer, 0, count);
-            return output.toByteArray();
-        } catch (Throwable throwable) {
-            XposedBridge.log("PrismLock: error reading " + slot + ": " + throwable);
-            return null;
-        }
-    }
-
-    private static synchronized void refreshConfig() {
-        long now = SystemClock.elapsedRealtime();
-        if (now - lastRead < REFRESH_INTERVAL_MS) return;
-        lastRead = now;
-        try {
-            Context app = AndroidAppHelper.currentApplication();
-            if (app == null) return;
-            Cursor cursor = app.getContentResolver().query(CFG, null, null, null, null);
-            if (cursor == null) return;
+    static Field field(Class<?> type, String name) throws NoSuchFieldException {
+        for (Class<?> current = type; current != null; current = current.getSuperclass()) {
             try {
-                if (!cursor.moveToFirst()) return;
-                long version = cursor.getLong(4);
-                if (version == config.versionCode) return;
-                RuntimeConfig next = load(app, cursor, version);
-                config = next;
-                XposedBridge.log("PrismLock: config size=" + next.size + " stroke10=" + next.stroke10
-                        + " dark=" + next.darkKind + " light=" + next.lightKind
-                        + " enabled=" + next.enabled);
-            } finally {
-                cursor.close();
-            }
-        } catch (Throwable throwable) {
-            // Keep the last known-good snapshot instead of silently disabling the module.
-            XposedBridge.log("PrismLock: configuration unavailable (" + throwable + ")");
+                Field field = current.getDeclaredField(name);
+                field.setAccessible(true);
+                return field;
+            } catch (NoSuchFieldException ignored) { }
         }
+        throw new NoSuchFieldException(name);
     }
 
-    private static RuntimeConfig load(Context app, Cursor cursor, long version) {
-        int size = cursor.getInt(0);
-        int stroke10 = cursor.getInt(1);
-        String darkKind = cursor.getString(2);
-        String lightKind = cursor.getString(3);
-        boolean enabled = cursor.getInt(5) == 1;
-        String iconTag = cursor.getString(6);
-        String animationTag = cursor.getString(7);
-
-        byte[] icon = null, iconLight = null, iconAod = null, animation = null;
-        try {
-            Context module = app.createPackageContext(BuildConfig.APPLICATION_ID, 0);
-            if (iconTag != null && !iconTag.isEmpty()) {
-                icon = selected(module, "icons", iconTag, size);
-                iconLight = selected(module, "icons", Catalog.iconTag(module, iconTag, "light"), size);
-                iconAod = selected(module, "icons", Catalog.iconTag(module, iconTag, "aod"), size);
-            }
-            if (animationTag != null && !animationTag.isEmpty()) {
-                animation = selected(module, "animations", animationTag, 72);
-            }
-        } catch (Throwable throwable) {
-            XposedBridge.log("PrismLock: catalog artwork unavailable (" + throwable + ")");
-        }
-
-        byte[] darkData = darkKind == null || darkKind.isEmpty() ? null : readAll(app, "dark");
-        byte[] lightData = lightKind == null || lightKind.isEmpty() ? null : readAll(app, "light");
-        return RuntimeConfig.create(version, size, stroke10, enabled,
-                darkKind, lightKind, darkData, lightData, icon, iconLight, iconAod, animation);
+    private interface Setup { void run() throws Throwable; }
+    private void optional(String name, Setup setup) {
+        try { setup.run(); } catch (Throwable failure) { warnOnce(name, failure); }
     }
-
-    private static byte[] selected(Context module, String kind, String tag, int size) {
-        try {
-            return Catalog.selected(module, kind, tag, size);
-        } catch (Throwable throwable) {
-            XposedBridge.log("PrismLock: cannot load " + kind + "_" + tag + " (" + throwable + ")");
-            return null;
-        }
-    }
-
-    @Override
-    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam parameter) {
-        if (!TARGET.equals(parameter.packageName)) return;
-        installIconLoader(parameter.classLoader);
-
-        try {
-            XposedHelpers.findAndHookMethod("com.samsung.android.biometrics.app.setting.Utils",
-                    parameter.classLoader, "readFile", File.class, new XC_MethodHook() {
-                        @Override protected void beforeHookedMethod(MethodHookParam param) {
-                            File file = (File) param.args[0];
-                            if (file == null || !"user_fingerprint_touch_effect.json".equals(file.getName())) return;
-                            refreshConfig();
-                            RuntimeConfig snapshot = config;
-                            if (snapshot.enabled && snapshot.animation != null) {
-                                param.setResult(snapshot.animation);
-                                if (loggedAssets.add("custom-touch-json")) {
-                                    XposedBridge.log("PrismLock: using Samsung custom touch JSON path");
-                                }
-                            }
-                        }
-                    });
-        } catch (Throwable throwable) {
-            XposedBridge.log("PrismLock: custom touch path unavailable: " + throwable);
-        }
-
-        try {
-            XposedHelpers.findAndHookMethod(BitmapFactory.class, "decodeFile", String.class,
-                    new XC_MethodHook() {
-                        @Override protected void beforeHookedMethod(MethodHookParam param) {
-                            String path = (String) param.args[0];
-                            if (path == null || !"user_fingerprint_touch_effect.png".equals(new File(path).getName())) return;
-                            refreshConfig();
-                            RuntimeConfig snapshot = config;
-                            if (snapshot.enabled && snapshot.animation != null) param.setResult(null);
-                        }
-                    });
-        } catch (Throwable throwable) {
-            XposedBridge.log("PrismLock: theme PNG fallback unavailable: " + throwable);
-        }
-
-        XC_MethodHook assetHook = new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) {
-                try {
-                    if (param.args.length == 0 || !(param.args[0] instanceof String)) return;
-                    String name = (String) param.args[0];
-                    name = name.substring(name.lastIndexOf('/') + 1);
-                    boolean touchEffect = AssetPolicy.isTouchEffect(name);
-                    if (!AssetPolicy.isIcon(name) && !touchEffect) return;
-                    refreshConfig();
-                    RuntimeConfig snapshot = config;
-                    if (!snapshot.enabled) return;
-
-                    byte[] output;
-                    if (touchEffect) {
-                        output = snapshot.animation;
-                    } else {
-                        output = iconPayload(snapshot, name);
-                    }
-                    if (output != null) {
-                        if (loggedAssets.add(name)) XposedBridge.log("PrismLock: replacing " + name);
-                        param.setResult(new ByteArrayInputStream(output));
-                    }
-                } catch (Throwable throwable) {
-                    XposedBridge.log("PrismLock: " + throwable);
-                }
-            }
-        };
-
-        try {
-            XposedHelpers.findAndHookMethod(AssetManager.class, "open", String.class, assetHook);
-            XposedHelpers.findAndHookMethod(AssetManager.class, "open", String.class, int.class, assetHook);
-            XposedBridge.log("PrismLock: hook active in " + TARGET);
-        } catch (Throwable throwable) {
-            XposedBridge.log("PrismLock: hook failed: " + throwable);
-        }
+    private void warnOnce(String name, Throwable failure) {
+        if (logged.add(name)) log(Log.WARN, "PrismLock", name + " unavailable; keeping Samsung fallback", failure);
     }
 }

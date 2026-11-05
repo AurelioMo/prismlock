@@ -24,6 +24,7 @@ public class UpdateFlowTest {
     private ShadowApplicationPackageManager manager;
 
     @Before public void setup() throws Exception {
+        UpdateChecker.source = () -> null;
         app = RuntimeEnvironment.getApplication();
         app.getSharedPreferences(MainActivity.PREFS, 0).edit().clear().commit();
         app.getSharedPreferences(MainActivity.PREFS, 0).edit()

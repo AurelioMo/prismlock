@@ -9,7 +9,7 @@ Keep changes small and limited to fingerprint artwork, touch effects, catalog UI
 or build tooling. Do not modify authentication results, enrollment, illumination
 masks, brightness control, device security settings, or the hook's package scope.
 
-Use Java 17 and preserve the existing native Android structure. Avoid adding
+Use Java 21 and preserve the existing native Android structure. Avoid adding
 frameworks, generated binaries or local research dumps. Update the changelog for
 user-visible changes and document any required LSPosed activation steps.
 

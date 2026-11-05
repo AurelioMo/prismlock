@@ -17,8 +17,8 @@ zipalign -c -P 16 4 app/build/outputs/apk/debug/app-debug.apk
 
 Use Android SDK build-tools versions that support the flags above. After installing,
 compare the local SHA-256 with the installed `base.apk` and confirm package/version.
-The icon-loader regression check requires `ANDROID_HOME` and Java 17. It exercises
-the production hook against simulated Samsung/Xposed boundaries: stock and previous
+The icon-loader regression check requires `ANDROID_HOME` and Java 21. It runs
+`ModernHookTest` with the real API 102 classes and a simulated framework/Samsung boundary: stock and previous
 icon caches, light/AOD variants, imported artwork, color-filter scope, disable/fallback,
 and keyguard refresh. It does not establish device rendering compatibility.
 The Gradle update-flow tests use Robolectric on API 31 and 36 and require Java 21.
@@ -56,3 +56,54 @@ confirmation routing. These are simulated Android tests, not physical-device tes
 
 Record device model, Android/One UI versions, LSPosed version and app version for any
 failure report. Never commit private screenshots, raw device logs or firmware dumps.
+
+
+## Motion and compatibility regression checks
+
+`ArtworkTest` runs on simulated API 26, 28, 31 and 36. It checks recycled-row identity,
+selection persistence, retained tab lists, full-size OxygenOS preview space, startup and navigation
+through all three tabs, settings-tab restoration after recreation, bounded PNG
+sampling, every catalog effect's unchanged image data/frame rate/duration, the
+maximum of two overlapping image layers, strictly increasing opacity keys, Aqua's
+transparent ending, and all fingerprint variant footprints. The existing updater
+and modern hook checks remain required.
+
+On a physical Samsung device, compare the release baseline and this build on the
+same wallpaper and brightness. Check frame pacing during repeated selections,
+preview open/close, normal unlock, AOD and screen off/on. Record model, One UI and
+Android versions, peak memory and dropped frames. Automated tests do not establish
+all-model compatibility or a measured performance improvement. Physical-device results for 1.0.4 are recorded below.
+
+`ModernHookTest` runs on API 26, 31 and 36. It checks scope/idempotent registration,
+versioned caches, light/AOD/import precedence, tint isolation, optional-loader
+fallback, keyguard refresh and reference-counted clipping restoration.
+`StartupUpdateTest` verifies an automatic offer on the first catalog tab despite
+old cache/prompt markers, another request after foreground return, concurrent check
+coalescing and immediate recovery from a failed request.
+
+For version 1.0.4, also verify module activation in an API 102 framework after
+upgrading from legacy registration. At maximum OxygenOS size, check the glow on
+dark/light/AOD screens and confirm stock clipping returns when customization is
+disabled. Missing optional clipping controls on older Samsung Lottie versions
+retain their original behavior.
+
+
+## 1.0.4 physical-device smoke test — 2026-11-05
+
+- Galaxy S23 / SM-S911B, reported Android 17 (API 37), One UI property `90000`,
+  LSPosed v2.2.1 (7936).
+- Installed the release-signed version 104 over version 103, preserving app data.
+- Navigated/scrolled the existing catalog and switched among all three tabs. Three
+  scripted runs recorded 148 / 160 / 155 rendered frames, with 1 / 0 / 0 janky
+  frames. Median frame time was 5 ms in each run; 95th percentiles were 6 / 6 / 5 ms.
+  This is a smoke-test sample on this device, not a controlled before/after benchmark
+  or a compatibility guarantee for all models.
+- Confirmed `API 102 hooks installed in com.samsung.android.biometrics.app.setting`
+  in the LSPosed module log after restarting the scoped process.
+- The user initially saw a square crop after increasing size while the old legacy
+  process was still active, then confirmed normal appearance after the new process
+  loaded. Module updates require scoped-process restart/reboot; ordinary selection
+  changes refresh through configuration notifications.
+- Existing theme/catalog presentation and selected settings remained available.
+  Automated tests additionally cover maximum OxygenOS preview space, clipping
+  restoration, startup update offers, import/tint/cache behavior and failure paths.

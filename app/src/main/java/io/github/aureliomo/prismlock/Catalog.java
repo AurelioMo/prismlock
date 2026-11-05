@@ -18,6 +18,17 @@ import java.util.regex.Pattern;
 final class Catalog {
     private static final Pattern FILE = Pattern.compile("(?:icons|animations)_[a-z0-9_]+\\.json");
 
+    private static volatile JSONObject cachedIndex;
+
+    private static JSONObject index(Context context) throws Exception {
+        JSONObject current = cachedIndex;
+        if (current != null) return current;
+        synchronized (Catalog.class) {
+            if (cachedIndex == null) cachedIndex = new JSONObject(read(context, "index.json"));
+            return cachedIndex;
+        }
+    }
+
     private Catalog() {
     }
 
@@ -67,7 +78,7 @@ final class Catalog {
     }
 
     static List<String> tags(Context context, String kind) throws Exception {
-        JSONArray entries = new JSONObject(read(context, "index.json")).getJSONArray(kind);
+        JSONArray entries = index(context).getJSONArray(kind);
         List<String> result = new ArrayList<>();
         for (int index = 0; index < entries.length(); index++) {
             result.add(entries.getJSONObject(index).getString("tag"));
@@ -99,11 +110,12 @@ final class Catalog {
             layer.getJSONObject("ks").getJSONObject("s")
                     .put("k", new JSONArray().put(scale).put(scale).put(100));
         }
+        if ("animations".equals(kind)) Motion.smooth(composition);
         return composition.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     static String iconTag(Context context, String tag, String variant) throws Exception {
-        JSONArray entries = new JSONObject(read(context, "index.json")).getJSONArray("icons");
+        JSONArray entries = index(context).getJSONArray("icons");
         for (int index = 0; index < entries.length(); index++) {
             JSONObject entry = entries.getJSONObject(index);
             if (!tag.equals(entry.getString("tag"))) continue;

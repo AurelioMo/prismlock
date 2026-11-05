@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.4 - 2026-11-05
+
+- Migrate fully to libxposed API 102.0.0 and modern module registration. A framework supporting API 102 is now required; legacy-only frameworks cannot load this version.
+- Replace the eager catalog with recycled native list rows; decode thumbnails and display-sized wallpapers in the background.
+- Load hook configuration and artwork outside Samsung's UI thread, with change notifications and complete configuration snapshots.
+- Let enlarged OxygenOS/custom icon glows draw beyond the composition and parent clipping bounds on compatible Samsung Lottie builds; restore original clipping for stock icons. Preserve sensor/touch geometry.
+- Check for stable updates on every foreground entry, show available updates without opening Settings, share concurrent checks and allow immediate retries after failures.
+- Preserve the full catalog, imports, light/AOD variants, themes, visual effects and finite playback durations.
+- Add automated API 102 hook, clipping restoration, recycled-row and startup-update regressions.
+- Validate installation, app navigation/scrolling and API 102 hook loading on Galaxy S23. Restart the scoped process/reboot after upgrading from legacy.
+
 ## 1.0.3 - 2026-11-04
 
 - Import 11 ColorOS 17 fingerprint designs and 10 touch effects at 60 fps.

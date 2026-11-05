@@ -319,6 +319,7 @@ final class UpdateInstaller {
     }
 
     /** Isolates API 28+ types so older devices never load them. */
+    @android.annotation.TargetApi(28)
     private static final class Api28 {
         static final int SIGNING_FLAG = PackageManager.GET_SIGNING_CERTIFICATES;
 

@@ -40,5 +40,5 @@ jobs:
         run: python3 scripts/check_icon_loader.py
       - name: Assemble development APK
         run: ./gradlew --no-daemon assembleDebug
-      - name: Test update permission and installer flow
-        run: ./gradlew --no-daemon testDebugUnitTest
+      - name: Test update, catalog and modern hook flows
+        run: ./gradlew --no-daemon testDebugUnitTest lintDebug
