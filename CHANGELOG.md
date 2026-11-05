@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.6 - 2026-11-06
+
+- Center Keqing animation bounds so the visible effect stays aligned with the fingerprint sensor.
+- Wait for the initial configuration snapshot before replacing Samsung's touch effect, preventing an occasional default animation on the first authentication.
+
 ## 1.0.5 - 2026-11-05
 
 - Align catalog text/variant columns with their thumbnail grid.

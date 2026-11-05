@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import io.github.libxposed.api.XposedModule;
 
@@ -40,6 +41,7 @@ public final class Hook extends XposedModule {
     private final Map<Object, String> iconViews = Collections.synchronizedMap(new WeakHashMap<>());
     private final Map<Object, Long> windowVersions = Collections.synchronizedMap(new WeakHashMap<>());
     private final ExecutorService configWorker = AppWorkers.serial("prismlock-config");
+    private final CountDownLatch firstConfig = new CountDownLatch(1);
     private volatile RuntimeConfig config = RuntimeConfig.EMPTY;
     private volatile Context app;
     private volatile long lastRead = -2_000;
@@ -66,6 +68,7 @@ public final class Hook extends XposedModule {
                 File file = (File) chain.getArg(0);
                 if (file != null && "user_fingerprint_touch_effect.json".equals(file.getName())) {
                     refreshConfig(false);
+                    awaitFirstConfig();
                     RuntimeConfig snapshot = config;
                     if (snapshot.enabled && snapshot.animation != null) return snapshot.animation;
                 }
@@ -77,6 +80,7 @@ public final class Hook extends XposedModule {
                     String path = (String) chain.getArg(0);
                     if (path != null && "user_fingerprint_touch_effect.png".equals(basename(path))) {
                         refreshConfig(false);
+                        awaitFirstConfig();
                         RuntimeConfig snapshot = config;
                         if (snapshot.enabled && snapshot.animation != null) return null;
                     }
@@ -89,6 +93,7 @@ public final class Hook extends XposedModule {
                         boolean effect = AssetPolicy.isTouchEffect(name);
                         if (!effect && !AssetPolicy.isIcon(name)) return chain.proceed();
                         refreshConfig(false);
+                        awaitFirstConfig();
                         RuntimeConfig snapshot = config;
                         byte[] output = !snapshot.enabled ? null : effect ? snapshot.animation : iconPayload(snapshot, name);
                         return output == null ? chain.proceed() : new ByteArrayInputStream(output);
@@ -196,10 +201,18 @@ public final class Hook extends XposedModule {
                     } catch (Throwable failure) { warnOnce("configuration refresh", failure); }
                 } while (dirty.get());
             } finally {
+                firstConfig.countDown();
                 refreshing.set(false);
                 if (dirty.get()) refreshConfig(true);
             }
         });
+    }
+
+    /** Prevents the first authentication from racing the initial provider read. */
+    private void awaitFirstConfig() {
+        if (config.versionCode >= 0) return;
+        try { firstConfig.await(300, java.util.concurrent.TimeUnit.MILLISECONDS); }
+        catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
     }
 
     private void reloadIcons() {
