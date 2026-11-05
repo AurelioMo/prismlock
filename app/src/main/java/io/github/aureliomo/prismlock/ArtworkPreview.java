@@ -56,9 +56,13 @@ final class ArtworkPreview extends View {
         textPaint.setColor(activity.catalogScreen.muted);
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(activity.dp(13));
-        textPaint.setTypeface(activity.catalogScreen.text("", 13, 400, activity.catalogScreen.muted).getTypeface());
+        textPaint.setTypeface(activity.catalogScreen.bodyTypeface());
         String tag = activity.preferences().getBoolean("enabled", true)
                 ? activity.preferences().getString("icons".equals(category) ? "icon" : "animation", "") : "";
+        if (!tag.isEmpty()) {
+            try { tag = Catalog.resolve(activity, category, tag); }
+            catch (Exception ignored) { }
+        }
         String slot = importSlot();
         String file = tag.isEmpty() ? "" : category + "_" + tag + ".json";
         if (!tag.isEmpty() && "icons".equals(category)) {
@@ -79,6 +83,7 @@ final class ArtworkPreview extends View {
         status = identity.isEmpty() ? "" : "Loading preview...";
         if (identity.isEmpty()) { invalidate(); return; }
         loading = LOADER.submit(() -> {
+            Bitmap[] decoded = null;
             try {
                 PreviewImages next;
                 if (!slot.isEmpty()) {
@@ -91,22 +96,27 @@ final class ArtworkPreview extends View {
                     }
                     Bitmap bitmap = BitmapFactory.decodeFile(new File(activity.getFilesDir(), "custom_" + slot + ".png").getPath());
                     if (bitmap == null) throw new IllegalArgumentException("Invalid imported image");
-                    next = new PreviewImages(new Bitmap[]{bitmap}, new double[]{-bitmap.getWidth() / 2.0,
+                    decoded = new Bitmap[]{bitmap};
+                    next = new PreviewImages(decoded, new double[]{-bitmap.getWidth() / 2.0,
                             -bitmap.getHeight() / 2.0, bitmap.getWidth() / 2.0, bitmap.getHeight() / 2.0}, 30);
                 } else {
                     JSONObject document = new JSONObject(Catalog.read(activity, previewFile));
                     org.json.JSONArray assets = document.getJSONArray("assets");
                     org.json.JSONArray bounds = document.getJSONArray("catalogBounds");
                     Bitmap[] frames = new Bitmap[assets.length()];
+                    decoded = frames;
                     for (int index = 0; index < frames.length; index++) {
-                        if (Thread.currentThread().isInterrupted() || request != generation || !identity.equals(requested)) return;
+                        if (Thread.currentThread().isInterrupted() || request != generation || !identity.equals(requested)) {
+                            recycleUnpublished(frames);
+                            return;
+                        }
                         String encoded = assets.getJSONObject(index).getString("p");
                         byte[] bytes = Base64.decode(encoded.substring(encoded.indexOf(',') + 1), Base64.DEFAULT);
                         frames[index] = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                         if (frames[index] == null) throw new IllegalArgumentException("Invalid preview frame");
                     }
                     next = new PreviewImages(frames, new double[]{bounds.getDouble(0), bounds.getDouble(1),
-                            bounds.getDouble(2), bounds.getDouble(3)}, document.getDouble("fr"));
+                            bounds.getDouble(2), bounds.getDouble(3)}, document.getDouble("fr") / document.optDouble("catalogFrameStep", 1));
                     for (int index = 0; index < frames.length; index++) {
                         next.opacity[index] = document.getJSONArray("layers").getJSONObject(index)
                                 .getJSONObject("ks").getJSONObject("o").optInt("k", 100);
@@ -114,7 +124,10 @@ final class ArtworkPreview extends View {
                 }
                 PreviewImages ready = next;
                 post(() -> {
-                    if (request != generation || !identity.equals(requested) || !isAttachedToWindow()) return;
+                    if (request != generation || !identity.equals(requested) || !isAttachedToWindow()) {
+                        recycleUnpublished(ready.frames);
+                        return;
+                    }
                     started = SystemClock.uptimeMillis();
                     images = ready;
                     double scale = CatalogScale.percent(category, activity.fingerprintSize(),
@@ -133,9 +146,15 @@ final class ArtworkPreview extends View {
                     invalidate();
                 });
             } catch (Exception exception) {
+                recycleUnpublished(decoded);
                 if (request == generation && identity.equals(requested)) { status = "Preview unavailable"; postInvalidate(); }
             }
         });
+    }
+
+    private static void recycleUnpublished(Bitmap[] frames) {
+        if (frames == null) return;
+        for (Bitmap frame : frames) if (frame != null && !frame.isRecycled()) frame.recycle();
     }
 
     private void cancelLoading() {

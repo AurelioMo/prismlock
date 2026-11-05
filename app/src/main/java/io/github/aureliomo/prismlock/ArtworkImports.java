@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 
 /** Bounded decoding and atomic publication keep imports off the UI thread. */
@@ -20,11 +19,7 @@ final class ArtworkImports {
     private static final int MAX_BYTES = 900 * 1024;
     private static final int MAX_DIMENSION = 256;
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
-    private static final ExecutorService WORKER = Executors.newSingleThreadExecutor(task -> {
-        Thread thread = new Thread(task, "prismlock-import");
-        thread.setDaemon(true);
-        return thread;
-    });
+    private static final ExecutorService WORKER = AppWorkers.serial("prismlock-import");
 
     interface Callback { void complete(String error); }
     private ArtworkImports() {}

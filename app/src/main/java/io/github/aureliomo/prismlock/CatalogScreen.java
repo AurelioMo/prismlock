@@ -58,6 +58,7 @@ final class CatalogScreen {
         muted = dark ? 0xFFABB3C3 : 0xFF566071;
         accent = dark ? 0xFFA8C8FF : 0xFF185FC1;
         panel = dark ? 0xE620252F : 0xEDFFFFFF;
+        UiMotion.configureRefresh(activity);
         activity.getWindow().setStatusBarColor(Color.TRANSPARENT);
         activity.getWindow().setNavigationBarColor(Color.TRANSPARENT);
         if (android.os.Build.VERSION.SDK_INT >= 29) {
@@ -172,6 +173,8 @@ final class CatalogScreen {
     int currentTab() {
         return selectedTab;
     }
+
+    Typeface bodyTypeface() { return regular; }
 
     int previewSurface() { return dark ? 0xFF19222D : 0xFFEAF1F8; }
 
@@ -344,12 +347,23 @@ final class CatalogScreen {
         list.setOnItemClickListener((parent, view, position, id) -> {
             int index = position - list.getHeaderViewsCount();
             if (index < 0 || index >= adapter.getCount()) return;
-            String tag = adapter.tags.get(index);
-            SettingsStore.select(activity.getSharedPreferences(MainActivity.PREFS, 0), adapter.key, tag);
-            adapter.selected = tag;
-            adapter.notifyDataSetChanged();
-            UiMotion.settle(((Row) view).thumbnail);
-            selectionChanged.run();
+            String family = adapter.tags.get(index);
+            List<Catalog.Style> styles = adapter.styles.get(family);
+            if (styles == null || styles.size() < 2) {
+                adapter.select(family, family, (Row) view, list);
+                return;
+            }
+            String[] labels = new String[styles.size()];
+            int selected = 0;
+            for (int i = 0; i < styles.size(); i++) {
+                labels[i] = styles.get(i).label;
+                if (styles.get(i).tag.equals(adapter.selectedArtwork)) selected = i;
+            }
+            new android.app.AlertDialog.Builder(activity).setTitle(Catalog.title(family))
+                    .setSingleChoiceItems(labels, selected, (dialog, which) -> {
+                        adapter.select(family, styles.get(which).tag, (Row) view, list);
+                        dialog.dismiss();
+                    }).setNegativeButton("Cancel", null).show();
         });
         return list;
     }
@@ -357,17 +371,41 @@ final class CatalogScreen {
     private final class CatalogAdapter extends BaseAdapter {
         final List<String> tags = new ArrayList<>();
         final String kind, key;
-        String selected;
+        String selected, selectedFamily, selectedArtwork;
+        final java.util.Map<String, List<Catalog.Style>> styles = new java.util.HashMap<>();
         CatalogAdapter(int tab) {
             kind = tab == 0 ? "icons" : "animations";
             key = tab == 0 ? "icon" : "animation";
             selected = activity.getSharedPreferences(MainActivity.PREFS, 0).getString(key, "");
             tags.add("");
-            try { tags.addAll(Catalog.tags(activity, kind)); }
+            try {
+                tags.addAll(Catalog.tags(activity, kind));
+                selectedFamily = Catalog.family(activity, kind, selected);
+                selectedArtwork = Catalog.resolve(activity, kind, selected);
+                for (String tag : tags) styles.put(tag, Catalog.styles(activity, kind, tag));
+            }
             catch (Exception failure) {
                 android.widget.Toast.makeText(activity, "Could not load the collection. Reopen the app to try again.",
                         android.widget.Toast.LENGTH_LONG).show();
             }
+        }
+        void select(String family, String tag, Row row, ListView list) {
+            String previousFamily = selectedFamily;
+            SettingsStore.select(activity.getSharedPreferences(MainActivity.PREFS, 0), key, tag);
+            selected = tag;
+            selectedArtwork = tag;
+            selectedFamily = family;
+            for (int child = 0; child < list.getChildCount(); child++) {
+                int position = list.getFirstVisiblePosition() + child - list.getHeaderViewsCount();
+                if (position < 0 || position >= tags.size()) continue;
+                String visibleTag = tags.get(position);
+                View visible = list.getChildAt(child);
+                if (visible instanceof Row && (visibleTag.equals(previousFamily) || visibleTag.equals(family))) {
+                    getView(position, visible, list);
+                }
+            }
+            UiMotion.settle(row.thumbnail);
+            selectionChanged.run();
         }
         @Override public int getCount() { return tags.size(); }
         @Override public Object getItem(int position) { return tags.get(position); }
@@ -376,12 +414,22 @@ final class CatalogScreen {
         @Override public View getView(int position, View recycled, ViewGroup parent) {
             Row row = recycled instanceof Row ? (Row) recycled : new Row();
             String tag = tags.get(position);
-            boolean checked = tag.equals(selected);
+            boolean checked = tag.equals(selectedFamily);
             String name = tag.isEmpty() ? "Samsung default" : Catalog.title(tag);
             row.label.setText(name);
+            List<Catalog.Style> choices = styles.get(tag);
+            String detail = "";
+            if (choices != null && choices.size() > 1) {
+                detail = choices.size() + " styles";
+                if (checked) for (Catalog.Style choice : choices) {
+                    if (choice.tag.equals(selectedArtwork)) detail = choice.label;
+                }
+            }
+            row.detail.setText(detail);
+            row.detail.setVisibility(detail.isEmpty() ? View.INVISIBLE : View.VISIBLE);
             row.check.setVisibility(checked ? View.VISIBLE : View.INVISIBLE);
             row.setSelected(checked);
-            row.setContentDescription(name + (checked ? ", selected" : ""));
+            row.setContentDescription(name + (detail.isEmpty() ? "" : ", " + detail) + (checked ? ", selected" : ""));
             float top = position == 0 ? dp(24) : 0, bottom = position == getCount() - 1 ? dp(24) : 0;
             GradientDrawable background = new GradientDrawable();
             background.setColor(panel);
@@ -393,7 +441,7 @@ final class CatalogScreen {
                 row.thumbnail.setPadding(dp(9), dp(9), dp(9), dp(9));
             } else {
                 row.thumbnail.setPadding(dp(4), dp(4), dp(4), dp(4));
-                ThumbnailLoader.load(activity, "previews/" + kind + "_" + tag + ".png", row.thumbnail, dp(36));
+                ThumbnailLoader.load(activity, "previews/" + kind + "_" + (checked ? selectedArtwork : tag) + ".png", row.thumbnail, dp(36));
             }
             return row;
         }
@@ -402,6 +450,7 @@ final class CatalogScreen {
     private final class Row extends LinearLayout {
         final ImageView thumbnail = new ImageView(activity);
         final TextView label = text("", 16, 600, foreground);
+        final TextView detail = text("", 13, 400, muted);
         final ImageView check = new ImageView(activity);
         Row() {
             super(activity);
@@ -413,8 +462,15 @@ final class CatalogScreen {
             thumbnail.setScaleType(ImageView.ScaleType.FIT_CENTER);
             thumbnail.setClipToOutline(true);
             addView(thumbnail, new LinearLayout.LayoutParams(dp(44), dp(44)));
-            label.setPadding(dp(14), 0, dp(4), 0);
-            addView(label, new LinearLayout.LayoutParams(0, -2, 1));
+            LinearLayout labels = column();
+            labels.setMinimumHeight(dp(44));
+            labels.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
+            labels.setPadding(dp(14), 0, dp(4), 0);
+            labels.addView(label);
+            detail.setMinLines(1);
+            detail.setPadding(0, dp(4), 0, 0);
+            labels.addView(detail);
+            addView(labels, new LinearLayout.LayoutParams(0, -2, 1));
             check.setImageDrawable(symbol("check", accent));
             addView(check, new LinearLayout.LayoutParams(dp(19), dp(19)));
         }

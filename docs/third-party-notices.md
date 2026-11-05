@@ -11,6 +11,7 @@ claim ownership over them or relicense them.
 | One UI font, wallpaper and native visual resources | Local Samsung / Now Brief audit | Samsung and its licensors. Used only as local visual reference. |
 | Prism, Vortex, Orbit and Neon artwork | User-supplied JPEGs | Supplied for PrismLock. Source hashes are recorded in the catalog index. |
 | Aqua animation | User-supplied `output-onlinegiftools.json` | Supplied for PrismLock. Converted and shortened locally; source hash is in the index. |
+| Keqing symbol and visual sequences | User-supplied `KeqingFingerPrint.apk` resource overlay | Original artwork remains with its respective owners; original artist identity is not established by the APK. Exact source SHA-256/member provenance is recorded in the catalog and [audit](catalog-audit.md). |
 | PrismLock logo | User-supplied generated prism image | Provided as project branding. |
 | Gradle wrapper | Gradle 8.13 generated wrapper | Generated files contain upstream notices; distribution checksum is pinned. |
 | libxposed API | `io.github.libxposed:api:102.0.0` | Compile-only dependency, not bundled as module implementation. |

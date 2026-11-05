@@ -58,7 +58,7 @@ public class ArtworkTest {
             android.view.View recycled = adapter.getView(2, row, icons);
             assertSame(row, recycled);
             assertEquals(Catalog.title(Catalog.tags(activity, "icons").get(0)),
-                    ((android.widget.TextView) ((android.view.ViewGroup) recycled).getChildAt(1)).getText().toString());
+                    ((android.widget.TextView) ((android.view.ViewGroup) ((android.view.ViewGroup) recycled).getChildAt(1)).getChildAt(0)).getText().toString());
             icons.performItemClick(recycled, 2, 2);
             assertEquals(Catalog.tags(activity, "icons").get(0), activity.preferences().getString("icon", ""));
             findDescription(root, "Animations").performClick();
@@ -115,7 +115,7 @@ public class ArtworkTest {
             assertEquals(original.getDouble("op"), smoothed.getDouble("op"), 0);
             assertEquals(original.getJSONArray("assets").toString(), smoothed.getJSONArray("assets").toString());
             JSONArray layers = smoothed.getJSONArray("layers");
-            for (double time = 0; time < smoothed.getDouble("op"); time += 0.25) {
+            for (double time = 0; time < smoothed.getDouble("op"); time += 0.25 * smoothed.optDouble("catalogFrameStep", 1)) {
                 int active = 0;
                 for (int i = 0; i < layers.length(); i++) {
                     JSONObject layer = layers.getJSONObject(i);

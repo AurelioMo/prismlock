@@ -1,0 +1,250 @@
+{
+  "icons": {
+    "aosp": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "bluegradient": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "circle": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "coloros": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "coloros2": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "coloros3": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "cookie": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "creeper": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "huawei": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "hyper": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "miui": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "nothingos": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "originos": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "originosblue": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "outline": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "oxygenos": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "ring": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "rubin": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "spiral": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "star": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "starblue": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "stipple": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "white": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "yinyang": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "prism": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "vortex": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "orbit": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "neon": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "coloros17_stardust": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "coloros17_ring": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "coloros17_halo": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "coloros17_sparks": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "coloros17_simple": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "coloros17_bubble": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "coloros17_swirl": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "coloros17_flare": {
+      "seconds": 3.0,
+      "frames": 1
+    },
+    "keqing": {
+      "seconds": 1.5,
+      "frames": 1
+    }
+  },
+  "animations": {
+    "buble": {
+      "seconds": 0.4666666666666667,
+      "frames": 28
+    },
+    "cosmos": {
+      "seconds": 0.7666666666666667,
+      "frames": 23
+    },
+    "creeper": {
+      "seconds": 0.8,
+      "frames": 24
+    },
+    "dust": {
+      "seconds": 0.8,
+      "frames": 24
+    },
+    "firework": {
+      "seconds": 0.8,
+      "frames": 24
+    },
+    "flare": {
+      "seconds": 0.4666666666666667,
+      "frames": 28
+    },
+    "genshin": {
+      "seconds": 0.8,
+      "frames": 24
+    },
+    "halo": {
+      "seconds": 0.4666666666666667,
+      "frames": 28
+    },
+    "magic": {
+      "seconds": 0.8,
+      "frames": 24
+    },
+    "originos": {
+      "seconds": 0.8,
+      "frames": 24
+    },
+    "originosblue": {
+      "seconds": 0.8,
+      "frames": 24
+    },
+    "oxygenos": {
+      "seconds": 0.8,
+      "frames": 24
+    },
+    "ripple": {
+      "seconds": 0.4666666666666667,
+      "frames": 28
+    },
+    "spark": {
+      "seconds": 0.4666666666666667,
+      "frames": 28
+    },
+    "stardust": {
+      "seconds": 0.4666666666666667,
+      "frames": 28
+    },
+    "swirl": {
+      "seconds": 0.4666666666666667,
+      "frames": 28
+    },
+    "transparency": {
+      "seconds": 0.8,
+      "frames": 24
+    },
+    "aqua": {
+      "seconds": 0.8,
+      "frames": 24
+    },
+    "coloros17_ring": {
+      "seconds": 0.43333333333333335,
+      "frames": 26
+    },
+    "coloros17_melodic_stream": {
+      "seconds": 0.6833333333333333,
+      "frames": 41
+    },
+    "coloros17_fizz": {
+      "seconds": 0.4666666666666667,
+      "frames": 28
+    },
+    "keqing": {
+      "seconds": 1.0166666666666666,
+      "frames": 61
+    },
+    "keqing_appear": {
+      "seconds": 0.4166666666666667,
+      "frames": 25
+    },
+    "keqing_disappear": {
+      "seconds": 0.4166666666666667,
+      "frames": 25
+    }
+  }
+}

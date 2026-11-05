@@ -11,18 +11,17 @@ import android.os.Looper;
 import android.widget.ImageView;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /** Decode wallpaper outside the first-frame path and retain only one display-sized image. */
 final class WallpaperLoader {
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
-    private static final ExecutorService WORKER = Executors.newSingleThreadExecutor(task -> {
-        Thread thread = new Thread(task, "prismlock-wallpaper");
-        thread.setDaemon(true);
-        return thread;
-    });
-    private static Bitmap cached;
-    private static String cachedKey;
+    private static final ExecutorService WORKER = AppWorkers.serial("prismlock-wallpaper");
+    private static volatile CachedImage cached;
+    private static final class CachedImage {
+        final String key;
+        final Bitmap bitmap;
+        CachedImage(String key, Bitmap bitmap) { this.key = key; this.bitmap = bitmap; }
+    }
     private WallpaperLoader() {}
 
     static void load(Context context, ImageView target, boolean dark) {
@@ -31,19 +30,25 @@ final class WallpaperLoader {
         int height = context.getResources().getDisplayMetrics().heightPixels;
         String key = resource + ":" + width + ":" + height;
         target.setTag(key);
+        CachedImage ready = cached;
+        if (ready != null && key.equals(ready.key)) {
+            target.setImageBitmap(ready.bitmap);
+            return;
+        }
         target.setBackgroundColor(dark ? 0xFF101920 : 0xFFF3F8FC);
         Context app = context.getApplicationContext();
         WeakReference<ImageView> reference = new WeakReference<>(target);
         WORKER.execute(() -> {
-            if (!key.equals(cachedKey) || cached == null) {
+            CachedImage current = cached;
+            if (current == null || !key.equals(current.key)) {
                 try {
                     Bitmap image = decode(app.getResources(), resource, width, height);
                     if (image == null) return;
-                    cached = image;
-                    cachedKey = key;
+                    current = new CachedImage(key, image);
+                    cached = current;
                 } catch (Exception ignored) { return; }
             }
-            Bitmap result = cached;
+            Bitmap result = current.bitmap;
             MAIN.post(() -> {
                 ImageView view = reference.get();
                 if (view != null && key.equals(view.getTag())) view.setImageBitmap(result);

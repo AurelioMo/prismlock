@@ -12,25 +12,27 @@ final class Motion {
         if (layers.length() < 2) return;
         double start = composition.getDouble("ip");
         double end = composition.getDouble("op");
+        double step = composition.optDouble("catalogFrameStep", 1);
+        double half = step / 2;
         // Only the built-in sequential image timeline is eligible. Imports are untouched.
         for (int i = 0; i < layers.length(); i++) {
             JSONObject layer = layers.getJSONObject(i);
-            if (layer.optInt("ty", -1) != 2 || layer.getDouble("ip") != start + i
-                    || layer.getDouble("op") != start + i + 1
+            if (layer.optInt("ty", -1) != 2 || Math.abs(layer.getDouble("ip") - (start + i * step)) > 0.000001
+                    || Math.abs(layer.getDouble("op") - (start + (i + 1) * step)) > 0.000001
                     || layer.getJSONObject("ks").getJSONObject("o").optInt("a", 0) != 0) return;
         }
-        if (end != start + layers.length()) return;
+        if (Math.abs(end - start - layers.length() * step) > 0.000001) return;
         for (int i = 0; i < layers.length(); i++) {
             JSONObject layer = layers.getJSONObject(i);
             double in = layer.getDouble("ip"), out = layer.getDouble("op");
             double opacity = layer.getJSONObject("ks").getJSONObject("o").getDouble("k");
-            double from = i == 0 ? start : in - 0.5;
-            double to = i == layers.length() - 1 ? end : out + 0.5;
+            double from = i == 0 ? start : in - half;
+            double to = i == layers.length() - 1 ? end : out + half;
             JSONArray keys = new JSONArray();
             keys.put(key(from, i == 0 ? opacity : 0));
-            if (i > 0) keys.put(key(in + 0.5, opacity));
+            if (i > 0) keys.put(key(in + half, opacity));
             // Neighbouring fade intervals meet at the frame's centre.
-            if (i == 0) keys.put(key(out - 0.5, opacity));
+            if (i == 0) keys.put(key(out - half, opacity));
             keys.put(key(to, i == layers.length() - 1 ? opacity : 0));
             layer.put("ip", from).put("op", to);
             layer.getJSONObject("ks").put("o", new JSONObject().put("a", 1).put("k", keys));

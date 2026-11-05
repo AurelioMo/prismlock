@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.5 - 2026-11-05
+
+- Align catalog text/variant columns with their thumbnail grid.
+- Retarget all built-in timelines to 120fps with scaled layer timing and interpolation; retain source images, source cadence and total durations. Request up to 120Hz for the app on supported displays.
+- Coalesce thumbnail requests, use cached wallpaper immediately, refresh only affected visible rows, recycle unpublished canceled preview bitmaps and release idle worker threads.
+- Add Keqing's static symbol, complete electro effect from 60fps source frames, and appear/disappear styles from the supplied resource overlay.
+- Consolidate repeated visual designs into 30 icon families and 19 effect families, with distinct color/motion styles selectable inside each family.
+- Preserve existing selections and light/AOD behavior; resolve the old Outline identifier to the sharper Bubble artwork.
+- Add decoded-frame/timeline audit tools, source provenance and catalog-family regression coverage.
+
 ## 1.0.4 - 2026-11-05
 
 - Migrate fully to libxposed API 102.0.0 and modern module registration. A framework supporting API 102 is now required; legacy-only frameworks cannot load this version.

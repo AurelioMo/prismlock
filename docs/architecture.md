@@ -19,7 +19,7 @@ The sole supported hook target is `com.samsung.android.biometrics.app.setting`.
 | `CatalogScreen` | Recycled native catalog lists, settings and theme presentation |
 | `ThumbnailLoader` / `WallpaperLoader` | Background pixel decoding with bounded/display-sized caching |
 | `IconOverflow` | Reversible custom icon clipping changes without changing sensor geometry |
-| `Catalog` | Asset lookup, variant selection and Lottie transforms |
+| `Catalog` / `CatalogIndex` | Immutable family/style/alias lookup, theme selection and Lottie transforms |
 | `CatalogScale` | Shared visible-footprint calculation |
 | `ConfigProvider` | Read-only configuration/import access across processes |
 | `Hook` | Samsung visual-resource interception |
@@ -88,17 +88,21 @@ compensate for transparent margins without per-frame scale changes. Effects
 use 132 units, independently of the fingerprint-size preference.
 
 Built-in effects blend adjacent image layers over a single source-frame interval.
-There are at most two active image layers, no generated intermediate bitmaps, and
-no changes to source PNGs, composition frame rates or total durations. Static icons,
+There are at most two active image layers and no generated intermediate bitmaps.
+Source PNGs and total durations are unchanged. The playback timebase is 120fps;
+source cadence is retained in `catalogSourceFps`/`catalogFrameStep` and every
+frame/keyframe interval is scaled accordingly. Static icons,
 colors, alpha bounds, light/AOD variants and imported Lottie timelines are preserved.
 Selection feedback uses a 180ms alpha/scale settling curve. Existing artwork,
 including baked-in glows and blur, is retained.
 
 The catalog index is parsed once per process. Native `ListView` adapters reuse
-visible rows; each tab retains its list and scroll position. Thumbnails decode on a
-worker and share a 2 MiB pixel cache with request identity checks for recycled rows.
+visible rows; each tab retains its list and scroll position. Thumbnails decode on an idle-expiring worker, coalesce concurrent requests, and
+share a 2 MiB pixel cache with request identity checks for recycled rows.
 Wallpapers decode off the main thread, are scaled to the display, and retain a
-single cached bitmap. Previews share one idle-expiring worker, cancel obsolete requests, reuse their
+single cached bitmap; cache hits are delivered immediately. Selection rebinds only
+the old/new visible rows. AppWorkers releases idle IO/update/import/config threads
+after 15 seconds; the preview worker retains its 30-second timeout. Previews share one idle-expiring worker, cancel obsolete requests, reuse their
 drawing objects and redraw on display frames only while visible. They release frame
 references when detached. PNG imports are sampled before allocation, retain the
 256-pixel output cap, and replace the previous file only after successful decoding
@@ -115,7 +119,8 @@ are modified. Older Lottie implementations without these optional controls keep
 their original clipping behavior. Previews reserve extra vertical space for enlarged
 glows instead of clipping the same scaled image into a fixed-height card.
 
-Aqua uses 24 frames at 30fps (0.8 seconds). Its final
+Aqua retains 24 source images at 30fps source cadence, mapped to 96 playback ticks
+at 120fps (0.8 seconds). Its final
 four frames fade to zero opacity. The short finite composition completes on Lottie
 end/cancel, so it does not remain on the home screen after unlock.
 
@@ -153,3 +158,14 @@ through the resumed MainActivity, or queues it until the user returns to the app
 Versions 1.0.0 and 1.0.1 contain the previous updater. If their non-root installer
 callback is stuck, use the release-page download once to install 1.0.2; publishing
 a release cannot repair updater code already running on a phone.
+
+
+## Catalog families and compatibility identifiers
+
+The index lists one visible entry per reviewed visual family. Optional `styles`
+retain alternate colors or motion with their own tags/files/provenance. The
+immutable CatalogIndex flattens those declarations once, keeping list rendering
+free of repeated JSON parsing. `aliases` resolve obsolete duplicate identifiers
+before file/theme lookup. Family checkmarks and selected-style thumbnails preserve
+old saved choices, while a native single-choice dialog exposes alternate styles.
+See [catalog audit](catalog-audit.md) for the reviewed grouping decisions.

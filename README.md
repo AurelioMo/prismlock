@@ -23,7 +23,7 @@ Samsung devices and One UI builds, not only on one model or firmware version.
 Open the newest release, expand **Assets**, and download `PrismLock-*.apk`.
 The source ZIP/TAR files are not installable apps.
 
-Current version: **1.0.4**.
+Current version: **1.0.5**.
 
 ## Compatibility
 
@@ -65,8 +65,11 @@ Your settings and selections are preserved.
 
 ## Features
 
-- Built-in library of **36 fingerprint designs** and **21 touch animations**.
+- Built-in library of **30 fingerprint families** and **19 touch-effect families**, including Keqing, with alternate color/motion styles grouped inside each family.
 - Independent fingerprint and effect selection with automatic saving.
+- Native style picker for shared designs; old selections and alternate colors remain available.
+- Built-in 120fps playback timelines with temporal interpolation and unchanged durations; up to 120Hz UI refresh on supported displays.
+- Aligned title/style columns, coalesced thumbnail loading and idle-expiring background workers.
 - Color, black/light-mode and white/AOD variants for Prism, Vortex, Orbit and Neon.
 - PNG and Lottie imports for light and dark/AOD modes.
 - Separate fingerprint and animation previews with visible-bound size normalization.

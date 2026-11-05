@@ -43,7 +43,9 @@ def check_png(data, dimensions=None):
 def check_document(filename, static):
     document = json.loads((CATALOG / filename).read_text())
     require(document['w'] == document['h'] == 288, filename + ': invalid canvas')
-    require(document['fr'] > 0 and document['op'] > 0, filename + ': invalid timing')
+    require(document['fr'] == 120 and document['op'] > 0, filename + ': expected 120Hz timing')
+    step = document['catalogFrameStep']
+    require(step > 0 and abs(document['catalogSourceFps'] * step - 120) < 1e-6, filename + ': invalid source cadence')
     require(static or document['op'] / document['fr'] <= 1.5, filename + ': effect exceeds 1.5 seconds')
     require('catalogFootprint' not in document, filename + ': use the shared footprint')
     bounds = document['catalogBounds']
@@ -53,8 +55,8 @@ def check_document(filename, static):
     require(len(assets) == len(document['assets']) == len(document['layers']), filename + ': asset/layer mismatch')
     for position, layer in enumerate(document['layers']):
         require(layer['ty'] == 2 and layer['refId'] in assets, filename + ': unsupported layer')
-        require(layer['ip'] == (0 if static else position), filename + ': invalid layer start')
-        require(layer['op'] == (document['op'] if static else position + 1), filename + ': invalid layer end')
+        require(abs(layer['ip'] - (0 if static else position * step)) < 1e-6, filename + ': invalid layer start')
+        require(abs(layer['op'] - (document['op'] if static else (position + 1) * step)) < 1e-6, filename + ': invalid layer end')
         asset = assets[layer['refId']]
         require(asset['e'] == 1 and asset['u'] == '', filename + ': non-embedded asset')
         prefix, encoded = asset['p'].split(',', 1)
@@ -70,7 +72,7 @@ def main():
     count = 0
     for kind in ('icons', 'animations'):
         tags = set()
-        for entry in index[kind]:
+        for entry in [entry for root in index[kind] for entry in [root, *root.get('styles', [])]]:
             tag = entry['tag']
             filename = entry['file']
             require(re.fullmatch(r'[a-z0-9_]+', tag) is not None and tag not in tags, 'Invalid or duplicate tag')
@@ -90,7 +92,7 @@ def main():
                 require(alternate['catalogBounds'] == document['catalogBounds'], 'Variant sizing mismatch')
                 require(alternate['source_sha256'] == document['source_sha256'], 'Variant source mismatch')
             if tag == 'aqua' and kind == 'animations':
-                require(document['fr'] == 30 and document['op'] == 24, 'Aqua must last 0.8 seconds')
+                require(document['fr'] == 120 and document['op'] == 96 and document['catalogSourceFps'] == 30, 'Aqua must last 0.8 seconds')
                 require(document['layers'][-1]['ks']['o']['k'] == 0, 'Aqua final frame must be invisible')
                 opacity = [layer['ks']['o']['k'] for layer in document['layers'][-5:]]
                 require(opacity == [100, 75, 50, 25, 0], 'Aqua fade-out regression')
@@ -98,6 +100,16 @@ def main():
             expected_previews.add(preview)
             check_png((PREVIEWS / preview).read_bytes())
             count += 1
+    for kind in ('icons', 'animations'):
+        all_tags = {entry['tag'] for root in index[kind] for entry in [root, *root.get('styles', [])]}
+        root_tags = {entry['tag'] for entry in index[kind]}
+        aliases = index.get('aliases', {}).get(kind, {})
+        for legacy, target in aliases.items():
+            require(re.fullmatch(r'[a-z0-9_]+', legacy) is not None and legacy not in all_tags, 'Invalid alias source')
+            require(target in root_tags and target not in aliases, 'Alias must resolve directly to a visible family')
+        for root in index[kind]:
+            for style in root.get('styles', []):
+                require(bool(style.get('label')) and not style.get('styles'), 'Invalid style definition')
     require({path.name for path in CATALOG.iterdir()} == expected_files, 'Missing or unreferenced catalog files')
     require({path.name for path in PREVIEWS.iterdir()} == expected_previews, 'Missing or unreferenced previews')
     manifest = (ROOT / 'app/src/main/AndroidManifest.xml').read_text()
@@ -108,7 +120,7 @@ def main():
     properties = dict(line.split('=', 1) for line in (metadata / 'module.prop').read_text().splitlines() if line)
     require(properties['minApiVersion'] == properties['targetApiVersion'] == '102', 'Expected modern API 102')
     require(not (ROOT / 'app/src/main/assets/xposed_init').exists(), 'Legacy entrypoint must not be packaged')
-    print(f'PASS: {count} catalog entries, embedded PNG integrity, variants, timing and package identity')
+    print(f'PASS: {sum(len(index[kind]) for kind in ("icons", "animations"))} visible families / {count} artwork styles; embedded PNG integrity, aliases, variants, timing and package identity')
 
 
 if __name__ == '__main__':

@@ -107,3 +107,34 @@ retain their original behavior.
 - Existing theme/catalog presentation and selected settings remained available.
   Automated tests additionally cover maximum OxygenOS preview space, clipping
   restoration, startup update offers, import/tint/cache behavior and failure paths.
+
+
+## 1.0.5 catalog/Keqing coverage
+
+`CatalogFamiliesTest` runs on API 26, 31 and 36. It verifies every original 1.0.4
+identifier against the new family/style index, the Outline alias, alternate theme
+artwork, a grouped row's selected state, canceled/saved style choices, Keqing's
+three complete timelines, transparent endings and original 40% symbol opacity.
+The existing artwork, updater and modern-hook regressions remain required.
+The optional full-frame audit scripts and source provenance are documented in
+[catalog audit](catalog-audit.md).
+
+`Motion120Test` checks all legacy and Keqing playback durations against the native
+baseline, asserts the 120fps timebase and unchanged image counts, and samples
+intermediate opacity values for both 30fps and 60fps sources. `AppWorkersTest`
+verifies FIFO behavior, idle-thread teardown and successful restart for new work.
+
+
+## 1.0.5 physical-device validation — 2026-11-05
+
+Installed the final release-signed 120fps build on the Galaxy S23 without clearing
+app data. The installed APK hash matches the release artifact. The user confirmed
+functionality. Three navigation/scroll runs recorded 300 / 307 / 308 rendered
+frames with 2 / 0 / 1 janky frames (3 of 915 total). Frame-interval samples had a
+median of approximately 8.343 ms (~120Hz); the app window requested 120Hz. The
+first run's p95 was 14ms; the two warm runs were 8ms. These are device smoke-test
+results, not a guarantee of uninterrupted 120fps or an all-model comparison.
+After idle, no named PrismLock worker threads remained in the app process.
+The final local automated suite passed 83 tests and debug/release lint found no
+errors. Restart the scoped process/reboot after updating so LSPosed loads the
+new interpolation/configuration code; preferences and selections are retained.

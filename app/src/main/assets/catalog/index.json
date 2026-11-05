@@ -14,14 +14,6 @@
       ]
     },
     {
-      "tag": "bluegradient",
-      "file": "icons_bluegradient.json",
-      "frames": 1,
-      "source": [
-        "res/eE.webp"
-      ]
-    },
-    {
       "tag": "circle",
       "file": "icons_circle.json",
       "frames": 1,
@@ -38,16 +30,6 @@
       ],
       "external_source": "SystemUIFingerprintRes_17_0_New_LY_Icon.apk",
       "source_sha256": "5efb1a001d39fcb020356c139e848c629deee47972d1b3e24a0f329246cd54fc"
-    },
-    {
-      "tag": "coloros2",
-      "file": "icons_coloros2.json",
-      "frames": 1,
-      "source": [
-        "res/drawable-nodpi-v4/kgd_osfingerprint_icon.webp"
-      ],
-      "external_source": "SystemUIFingerprintRes_17_0_New_MelodicStream_Icon.apk",
-      "source_sha256": "5bbb5444a95a6b9c96e3d35ddded67cb31b7cdc68d7dab802132b4789278555c"
     },
     {
       "tag": "coloros3",
@@ -105,6 +87,20 @@
       "frames": 1,
       "source": [
         "res/AE.webp"
+      ],
+      "style_label": "White ring",
+      "styles": [
+        {
+          "tag": "coloros17_simple",
+          "file": "icons_coloros17_simple.json",
+          "frames": 1,
+          "source": [
+            "res/drawable-nodpi-v4/kgd_osfingerprint_icon.webp"
+          ],
+          "external_source": "SystemUIFingerprintRes_17_0_New_JJ_Icon.apk",
+          "source_sha256": "9f731c0a0c9c16d331dc4bf9e0b73e982969090b9a2955c7dc609e8adb183382",
+          "label": "Gray ring"
+        }
       ]
     },
     {
@@ -113,22 +109,18 @@
       "frames": 1,
       "source": [
         "res/Pn.webp"
-      ]
-    },
-    {
-      "tag": "originosblue",
-      "file": "icons_originosblue.json",
-      "frames": 1,
-      "source": [
-        "res/tr.webp"
-      ]
-    },
-    {
-      "tag": "outline",
-      "file": "icons_outline.json",
-      "frames": 1,
-      "source": [
-        "res/ka.webp"
+      ],
+      "style_label": "White",
+      "styles": [
+        {
+          "tag": "originosblue",
+          "file": "icons_originosblue.json",
+          "frames": 1,
+          "source": [
+            "res/tr.webp"
+          ],
+          "label": "Blue"
+        }
       ]
     },
     {
@@ -141,6 +133,20 @@
       "variants": [
         "light",
         "aod"
+      ],
+      "style_label": "Colored glow",
+      "styles": [
+        {
+          "tag": "coloros17_ring",
+          "file": "icons_coloros17_ring.json",
+          "frames": 1,
+          "source": [
+            "res/drawable-nodpi-v4/kgd_osfingerprint_icon.png"
+          ],
+          "external_source": "SystemUIFingerprintRes_17_0_New_HY_Icon.apk",
+          "source_sha256": "c08da2248ad99ecf8924ae9b1ee8673592c0b47d675c8a9a0dba65dd7188f82e",
+          "label": "White glow"
+        }
       ]
     },
     {
@@ -173,14 +179,18 @@
       "frames": 1,
       "source": [
         "res/Hw.webp"
-      ]
-    },
-    {
-      "tag": "starblue",
-      "file": "icons_starblue.json",
-      "frames": 1,
-      "source": [
-        "res/VX.webp"
+      ],
+      "style_label": "White",
+      "styles": [
+        {
+          "tag": "starblue",
+          "file": "icons_starblue.json",
+          "frames": 1,
+          "source": [
+            "res/VX.webp"
+          ],
+          "label": "Blue"
+        }
       ]
     },
     {
@@ -197,6 +207,18 @@
       "frames": 1,
       "source": [
         "res/JR.webp"
+      ],
+      "style_label": "White",
+      "styles": [
+        {
+          "tag": "bluegradient",
+          "file": "icons_bluegradient.json",
+          "frames": 1,
+          "source": [
+            "res/eE.webp"
+          ],
+          "label": "Blue gradient"
+        }
       ]
     },
     {
@@ -262,16 +284,6 @@
       "source_sha256": "3920c63f666a8c8e3b95b1f2afacbf687b72895c8a5ff4593b2fb71dc881b4fc"
     },
     {
-      "tag": "coloros17_ring",
-      "file": "icons_coloros17_ring.json",
-      "frames": 1,
-      "source": [
-        "res/drawable-nodpi-v4/kgd_osfingerprint_icon.png"
-      ],
-      "external_source": "SystemUIFingerprintRes_17_0_New_HY_Icon.apk",
-      "source_sha256": "c08da2248ad99ecf8924ae9b1ee8673592c0b47d675c8a9a0dba65dd7188f82e"
-    },
-    {
       "tag": "coloros17_halo",
       "file": "icons_coloros17_halo.json",
       "frames": 1,
@@ -292,16 +304,6 @@
       "source_sha256": "288855db7c5827d7fc0fee8622fa2f94c9627e7d2accd6c95aa2470574c67d48"
     },
     {
-      "tag": "coloros17_simple",
-      "file": "icons_coloros17_simple.json",
-      "frames": 1,
-      "source": [
-        "res/drawable-nodpi-v4/kgd_osfingerprint_icon.webp"
-      ],
-      "external_source": "SystemUIFingerprintRes_17_0_New_JJ_Icon.apk",
-      "source_sha256": "9f731c0a0c9c16d331dc4bf9e0b73e982969090b9a2955c7dc609e8adb183382"
-    },
-    {
       "tag": "coloros17_bubble",
       "file": "icons_coloros17_bubble.json",
       "frames": 1,
@@ -319,7 +321,21 @@
         "res/drawable-nodpi-v4/kgd_osfingerprint_icon.webp"
       ],
       "external_source": "SystemUIFingerprintRes_17_0_New_XW_Icon.apk",
-      "source_sha256": "e2d03f53a2523dfea1795750f10cb5949c86473bcf8c1c97b61e6fe05ab910cb"
+      "source_sha256": "e2d03f53a2523dfea1795750f10cb5949c86473bcf8c1c97b61e6fe05ab910cb",
+      "style_label": "ColorOS 17",
+      "styles": [
+        {
+          "tag": "coloros2",
+          "file": "icons_coloros2.json",
+          "frames": 1,
+          "source": [
+            "res/drawable-nodpi-v4/kgd_osfingerprint_icon.webp"
+          ],
+          "external_source": "SystemUIFingerprintRes_17_0_New_MelodicStream_Icon.apk",
+          "source_sha256": "5bbb5444a95a6b9c96e3d35ddded67cb31b7cdc68d7dab802132b4789278555c",
+          "label": "Original strokes"
+        }
+      ]
     },
     {
       "tag": "coloros17_flare",
@@ -330,6 +346,20 @@
       ],
       "external_source": "SystemUIFingerprintRes_17_0_New_ZF_Icon.apk",
       "source_sha256": "228c83961882f942e29fda3f0a6c5b17e0ecaa5088ae667cfd4a497f4bf706e8"
+    },
+    {
+      "tag": "keqing",
+      "file": "icons_keqing.json",
+      "frames": 1,
+      "source": [
+        "res/drawable-nodpi-v4/kgd_osfingerprint_icon.png"
+      ],
+      "external_source": "KeqingFingerPrint.apk",
+      "source_sha256": "6cd1a77d6f5826ee0c3f9886cd31edefc37b01947ee41b96555add85e6969087",
+      "variants": [
+        "light",
+        "aod"
+      ]
     }
   ],
   "animations": [
@@ -429,37 +459,6 @@
         "res/aG.webp",
         "res/7m.webp",
         "res/BG.webp"
-      ]
-    },
-    {
-      "tag": "dust",
-      "file": "animations_dust.json",
-      "frames": 24,
-      "source": [
-        "res/cE.webp",
-        "res/HD.webp",
-        "res/RY.webp",
-        "res/I3.webp",
-        "res/FS.webp",
-        "res/vF.webp",
-        "res/DM.webp",
-        "res/YV.webp",
-        "res/-L.webp",
-        "res/eH.webp",
-        "res/_1.webp",
-        "res/GE1.webp",
-        "res/HA.webp",
-        "res/Q2.webp",
-        "res/Hr.webp",
-        "res/0T.webp",
-        "res/HC.webp",
-        "res/Oz.webp",
-        "res/Ee1.webp",
-        "res/8L.webp",
-        "res/eq.webp",
-        "res/U3.webp",
-        "res/Tq.webp",
-        "res/5f.webp"
       ]
     },
     {
@@ -658,68 +657,41 @@
         "res/Vp.webp",
         "res/Lh.webp",
         "res/w4.webp"
-      ]
-    },
-    {
-      "tag": "originosblue",
-      "file": "animations_originosblue.json",
-      "frames": 24,
-      "source": [
-        "res/k5.webp",
-        "res/0k.webp",
-        "res/uw.webp",
-        "res/Pk.webp",
-        "res/fY.webp",
-        "res/tD.webp",
-        "res/Z_.webp",
-        "res/vD.webp",
-        "res/eU.webp",
-        "res/7A.webp",
-        "res/ND.webp",
-        "res/lO.webp",
-        "res/UK.webp",
-        "res/Md.webp",
-        "res/0C.webp",
-        "res/GP.webp",
-        "res/QA.webp",
-        "res/kN.webp",
-        "res/oE.webp",
-        "res/hr.webp",
-        "res/AV.webp",
-        "res/s5.webp",
-        "res/7W.webp",
-        "res/gf.webp"
-      ]
-    },
-    {
-      "tag": "oxygenos",
-      "file": "animations_oxygenos.json",
-      "frames": 24,
-      "source": [
-        "res/AR.webp",
-        "res/Wd.webp",
-        "res/-D.webp",
-        "res/5a.webp",
-        "res/NT.webp",
-        "res/jg.webp",
-        "res/mL.webp",
-        "res/JQ.webp",
-        "res/t1.webp",
-        "res/Lt.webp",
-        "res/4X.webp",
-        "res/5Q.webp",
-        "res/JE.webp",
-        "res/z8.webp",
-        "res/zF.webp",
-        "res/Ii1.webp",
-        "res/lS.webp",
-        "res/1Z.webp",
-        "res/TM.webp",
-        "res/55.webp",
-        "res/RO.webp",
-        "res/zv.webp",
-        "res/iZ.webp",
-        "res/vH.webp"
+      ],
+      "style_label": "Pink",
+      "styles": [
+        {
+          "tag": "originosblue",
+          "file": "animations_originosblue.json",
+          "frames": 24,
+          "source": [
+            "res/k5.webp",
+            "res/0k.webp",
+            "res/uw.webp",
+            "res/Pk.webp",
+            "res/fY.webp",
+            "res/tD.webp",
+            "res/Z_.webp",
+            "res/vD.webp",
+            "res/eU.webp",
+            "res/7A.webp",
+            "res/ND.webp",
+            "res/lO.webp",
+            "res/UK.webp",
+            "res/Md.webp",
+            "res/0C.webp",
+            "res/GP.webp",
+            "res/QA.webp",
+            "res/kN.webp",
+            "res/oE.webp",
+            "res/hr.webp",
+            "res/AV.webp",
+            "res/s5.webp",
+            "res/7W.webp",
+            "res/gf.webp"
+          ],
+          "label": "Blue"
+        }
       ]
     },
     {
@@ -941,7 +913,42 @@
         "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_25.webp"
       ],
       "external_source": "SystemUIFingerprintRes_17_0_New_HY_Press.apk",
-      "source_sha256": "1dbb7e10c51069cbf98a658e86b573cbe4ddc349820bea691e970f8f6da4db67"
+      "source_sha256": "1dbb7e10c51069cbf98a658e86b573cbe4ddc349820bea691e970f8f6da4db67",
+      "style_label": "ColorOS 17",
+      "styles": [
+        {
+          "tag": "oxygenos",
+          "file": "animations_oxygenos.json",
+          "frames": 24,
+          "source": [
+            "res/AR.webp",
+            "res/Wd.webp",
+            "res/-D.webp",
+            "res/5a.webp",
+            "res/NT.webp",
+            "res/jg.webp",
+            "res/mL.webp",
+            "res/JQ.webp",
+            "res/t1.webp",
+            "res/Lt.webp",
+            "res/4X.webp",
+            "res/5Q.webp",
+            "res/JE.webp",
+            "res/z8.webp",
+            "res/zF.webp",
+            "res/Ii1.webp",
+            "res/lS.webp",
+            "res/1Z.webp",
+            "res/TM.webp",
+            "res/55.webp",
+            "res/RO.webp",
+            "res/zv.webp",
+            "res/iZ.webp",
+            "res/vH.webp"
+          ],
+          "label": "Original"
+        }
+      ]
     },
     {
       "tag": "coloros17_melodic_stream",
@@ -1028,7 +1035,191 @@
         "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_27.webp"
       ],
       "external_source": "SystemUIFingerprintRes_17_0_New_QY_Press.apk",
-      "source_sha256": "5f4acb8148ac250976da3da5af376273c931ac7b862eef9cc6674beabaf76f09"
+      "source_sha256": "5f4acb8148ac250976da3da5af376273c931ac7b862eef9cc6674beabaf76f09",
+      "style_label": "ColorOS 17",
+      "styles": [
+        {
+          "tag": "dust",
+          "file": "animations_dust.json",
+          "frames": 24,
+          "source": [
+            "res/cE.webp",
+            "res/HD.webp",
+            "res/RY.webp",
+            "res/I3.webp",
+            "res/FS.webp",
+            "res/vF.webp",
+            "res/DM.webp",
+            "res/YV.webp",
+            "res/-L.webp",
+            "res/eH.webp",
+            "res/_1.webp",
+            "res/GE1.webp",
+            "res/HA.webp",
+            "res/Q2.webp",
+            "res/Hr.webp",
+            "res/0T.webp",
+            "res/HC.webp",
+            "res/Oz.webp",
+            "res/Ee1.webp",
+            "res/8L.webp",
+            "res/eq.webp",
+            "res/U3.webp",
+            "res/Tq.webp",
+            "res/5f.webp"
+          ],
+          "label": "Original"
+        }
+      ]
+    },
+    {
+      "tag": "keqing",
+      "file": "animations_keqing.json",
+      "frames": 61,
+      "source": [
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_0.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_1.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_2.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_3.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_4.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_5.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_6.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_7.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_8.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_9.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_10.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_11.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_12.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_13.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_14.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_15.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_16.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_17.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_18.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_19.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_20.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_21.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_22.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_23.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_24.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_25.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_26.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_27.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_28.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_29.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_30.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_31.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_32.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_33.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_34.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_35.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_36.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_37.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_38.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_39.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_40.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_41.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_42.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_43.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_44.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_45.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_46.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_47.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_48.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_49.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_50.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_51.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_52.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_53.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_54.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_55.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_56.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_57.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_58.png",
+        "res/drawable-nodpi-v4/kgd_fingerprint_element_60fps_59.png"
+      ],
+      "external_source": "KeqingFingerPrint.apk",
+      "source_sha256": "6cd1a77d6f5826ee0c3f9886cd31edefc37b01947ee41b96555add85e6969087",
+      "terminal_frame": "generated-transparent",
+      "style_label": "Electro",
+      "styles": [
+        {
+          "tag": "keqing_appear",
+          "file": "animations_keqing_appear.json",
+          "frames": 25,
+          "source": [
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_0.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_1.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_2.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_3.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_4.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_5.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_6.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_7.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_8.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_9.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_10.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_11.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_12.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_13.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_14.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_15.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_16.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_17.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_18.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_19.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_20.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_21.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_22.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_23.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadein_24.png"
+          ],
+          "external_source": "KeqingFingerPrint.apk",
+          "source_sha256": "6cd1a77d6f5826ee0c3f9886cd31edefc37b01947ee41b96555add85e6969087",
+          "label": "Appear"
+        },
+        {
+          "tag": "keqing_disappear",
+          "file": "animations_keqing_disappear.json",
+          "frames": 25,
+          "source": [
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_0.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_1.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_2.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_3.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_4.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_5.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_6.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_7.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_8.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_9.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_10.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_11.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_12.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_13.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_14.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_15.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_16.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_17.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_18.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_19.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_20.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_21.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_22.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_23.png",
+            "res/drawable-nodpi-v4/kgd_osfingerprint_fadeout_24.png"
+          ],
+          "external_source": "KeqingFingerPrint.apk",
+          "source_sha256": "6cd1a77d6f5826ee0c3f9886cd31edefc37b01947ee41b96555add85e6969087",
+          "label": "Disappear"
+        }
+      ]
     }
-  ]
+  ],
+  "aliases": {
+    "icons": {
+      "outline": "coloros17_bubble"
+    },
+    "animations": {}
+  }
 }

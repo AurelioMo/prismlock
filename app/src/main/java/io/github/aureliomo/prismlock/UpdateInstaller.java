@@ -27,7 +27,6 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /** Downloads, verifies and installs a release APK. */
@@ -36,11 +35,7 @@ final class UpdateInstaller {
     private static final String PENDING_APK = "pending_update_apk";
     private static final String WAITING_PERMISSION = "update_waiting_permission";
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
-    private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor(runnable -> {
-        Thread thread = new Thread(runnable, "prismlock-update");
-        thread.setDaemon(true);
-        return thread;
-    });
+    private static final ExecutorService EXECUTOR = AppWorkers.serial("prismlock-update");
 
     interface Callback {
         void onProgress(int percent);

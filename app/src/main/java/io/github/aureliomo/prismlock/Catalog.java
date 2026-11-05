@@ -8,7 +8,6 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -18,13 +17,13 @@ import java.util.regex.Pattern;
 final class Catalog {
     private static final Pattern FILE = Pattern.compile("(?:icons|animations)_[a-z0-9_]+\\.json");
 
-    private static volatile JSONObject cachedIndex;
+    private static volatile CatalogIndex cachedIndex;
 
-    private static JSONObject index(Context context) throws Exception {
-        JSONObject current = cachedIndex;
+    private static CatalogIndex index(Context context) throws Exception {
+        CatalogIndex current = cachedIndex;
         if (current != null) return current;
         synchronized (Catalog.class) {
-            if (cachedIndex == null) cachedIndex = new JSONObject(read(context, "index.json"));
+            if (cachedIndex == null) cachedIndex = new CatalogIndex(new JSONObject(read(context, "index.json")));
             return cachedIndex;
         }
     }
@@ -42,7 +41,12 @@ final class Catalog {
             case "aqua": return "Aqua";
             case "buble": return "ColorOS 17 · Bubble";
             case "aosp": return "AOSP";
-            case "bluegradient": return "Blue gradient";
+            case "white": return "Classic";
+            case "bluegradient": return "Classic · Blue gradient";
+            case "outline": return "ColorOS 17 · Bubble";
+            case "keqing": return "Keqing";
+            case "keqing_appear": return "Keqing · Appear";
+            case "keqing_disappear": return "Keqing · Disappear";
             case "coloros": return "ColorOS 17 · Ripple";
             case "coloros2": return "ColorOS 17 · Melodic stream";
             case "coloros3": return "ColorOS 17 · Fizz";
@@ -77,17 +81,18 @@ final class Catalog {
         }
     }
 
-    static List<String> tags(Context context, String kind) throws Exception {
-        JSONArray entries = index(context).getJSONArray(kind);
-        List<String> result = new ArrayList<>();
-        for (int index = 0; index < entries.length(); index++) {
-            result.add(entries.getJSONObject(index).getString("tag"));
-        }
-        return result;
+    static final class Style {
+        final String tag, label;
+        Style(String tag, String label) { this.tag = tag; this.label = label; }
     }
 
+    static List<String> tags(Context context, String kind) throws Exception { return index(context).tags(kind); }
+    static String resolve(Context context, String kind, String tag) throws Exception { return index(context).resolve(kind, tag); }
+    static String family(Context context, String kind, String tag) throws Exception { return index(context).family(kind, tag); }
+    static List<Style> styles(Context context, String kind, String tag) throws Exception { return index(context).styles(kind, tag); }
+
     static byte[] selected(Context context, String kind, String tag, int size) throws Exception {
-        JSONObject composition = new JSONObject(read(context, kind + "_" + tag + ".json"));
+        JSONObject composition = new JSONObject(read(context, kind + "_" + resolve(context, kind, tag) + ".json"));
         JSONArray layers = composition.getJSONArray("layers");
         JSONArray assets = composition.getJSONArray("assets");
         JSONArray bounds = composition.getJSONArray("catalogBounds");
@@ -115,17 +120,6 @@ final class Catalog {
     }
 
     static String iconTag(Context context, String tag, String variant) throws Exception {
-        JSONArray entries = index(context).getJSONArray("icons");
-        for (int index = 0; index < entries.length(); index++) {
-            JSONObject entry = entries.getJSONObject(index);
-            if (!tag.equals(entry.getString("tag"))) continue;
-            JSONArray variants = entry.optJSONArray("variants");
-            if (variants != null) {
-                for (int position = 0; position < variants.length(); position++) {
-                    if (variant.equals(variants.getString(position))) return tag + "_" + variant;
-                }
-            }
-        }
-        return tag;
+        return index(context).iconTag(tag, variant);
     }
 }

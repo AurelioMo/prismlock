@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import io.github.libxposed.api.XposedModule;
 
@@ -40,11 +39,7 @@ public final class Hook extends XposedModule {
     private final Map<Object, Boolean> customDrawables = Collections.synchronizedMap(new WeakHashMap<>());
     private final Map<Object, String> iconViews = Collections.synchronizedMap(new WeakHashMap<>());
     private final Map<Object, Long> windowVersions = Collections.synchronizedMap(new WeakHashMap<>());
-    private final ExecutorService configWorker = Executors.newSingleThreadExecutor(task -> {
-        Thread thread = new Thread(task, "prismlock-config");
-        thread.setDaemon(true);
-        return thread;
-    });
+    private final ExecutorService configWorker = AppWorkers.serial("prismlock-config");
     private volatile RuntimeConfig config = RuntimeConfig.EMPTY;
     private volatile Context app;
     private volatile long lastRead = -2_000;
@@ -229,6 +224,7 @@ public final class Hook extends XposedModule {
         String tag = cursor.getString(6), effect = cursor.getString(7);
         byte[] icon = null, iconLight = null, iconAod = null, animation = null;
         if (tag != null && !tag.isEmpty()) {
+            tag = Catalog.resolve(module, "icons", tag);
             icon = Catalog.selected(module, "icons", tag, size);
             String lightTag = Catalog.iconTag(module, tag, "light"), aodTag = Catalog.iconTag(module, tag, "aod");
             iconLight = tag.equals(lightTag) ? icon : Catalog.selected(module, "icons", lightTag, size);

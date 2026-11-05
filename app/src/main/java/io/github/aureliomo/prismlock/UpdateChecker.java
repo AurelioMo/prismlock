@@ -16,7 +16,6 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /** Reads stable releases from GitHub and compares them with the installed version. */
 final class UpdateChecker {
@@ -26,11 +25,7 @@ final class UpdateChecker {
     private static final String USER_AGENT = "PrismLock/" + BuildConfig.VERSION_NAME;
     private static final int MAX_RESPONSE_BYTES = 1024 * 1024;
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
-    private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor(runnable -> {
-        Thread thread = new Thread(runnable, "prismlock-update-check");
-        thread.setDaemon(true);
-        return thread;
-    });
+    private static final ExecutorService EXECUTOR = AppWorkers.serial("prismlock-update-check");
 
     interface ReleaseSource { Release fetch() throws Exception; }
     static volatile ReleaseSource source = UpdateChecker::fetch;
