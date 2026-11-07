@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0 - 2026-11-07
+
+- Replace the Hydro recolor with a new water ripple and splash animation without an elemental logo in the center.
+- Keep the Pyro fingerprint optically centered.
+
 ## 1.0.9 - 2026-11-07
 
 - Add the white Hydro fingerprint family and a new blue water animation derived from the Pyro timing and composition.

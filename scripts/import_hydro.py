@@ -1,5 +1,5 @@
 """Create the white Hydro icon and blue Hydro animation from supplied artwork."""
-import argparse, base64, hashlib, io, json, colorsys
+import argparse, base64, hashlib, io, json, colorsys, math
 from pathlib import Path
 from PIL import Image
 ROOT=Path(__file__).resolve().parents[1]; CATALOG=ROOT/'app/src/main/assets/catalog'; PREVIEWS=ROOT/'app/src/main/assets/previews'
@@ -21,21 +21,29 @@ def icon_doc(im,name,color=255):
   a=im.getchannel('A'); n=Image.new('RGBA',im.size,(color,color,color,0)); n.putalpha(a); im=n
  b=im.getchannel('A').point(lambda x:255 if x>=16 else 0).getbbox(); enc='data:image/png;base64,'+base64.b64encode(png(im)).decode()
  return {'v':'5.9.1','fr':120,'ip':0,'op':90,'w':288,'h':288,'nm':name,'ddd':0,'assets':[{'id':'frame_0','w':216,'h':216,'u':'','e':1,'p':enc}], 'layers':[{'ddd':0,'ind':1,'ty':2,'nm':'frame_0','refId':'frame_0','sr':1,'ip':0,'op':90,'st':0,'bm':0,'ks':{'o':{'a':0,'k':100},'r':{'a':0,'k':0},'p':{'a':0,'k':[144,144,0]},'a':{'a':0,'k':[108,108,0]},'s':{'a':0,'k':[100,100,100]}}}], 'markers':[], 'catalogBounds':[b[0]-108,b[1]-108,b[2]-108,b[3]-108], 'catalogAlphaThreshold':16,'catalogSourceFps':120,'catalogFrameStep':1}
-def recolor(im):
- pix=im.load(); out=Image.new('RGBA',im.size); op=out.load()
- for y in range(im.height):
-  for x in range(im.width):
-   r,g,b,a=pix[x,y]
-   if a==0: op[x,y]=(0,0,0,0); continue
-   v=max(r,g,b)/255.0; lum=(0.299*r+0.587*g+0.114*b)/255.0
-   # Hydro palette: bright cyan highlights, deep ocean shadows.
-   t=max(0.0,min(1.0,(lum-0.08)/0.92)); rr=int(8+45*t); gg=int(70+150*t); bb=int(125+125*t)
-   op[x,y]=(rr,gg,bb,a)
- return out
+def water_frame(index, total=24):
+ from PIL import ImageDraw, ImageFilter
+ scale=3; size=288; canvas=Image.new('RGBA',(size*scale,size*scale),(0,0,0,0)); draw=ImageDraw.Draw(canvas)
+ t=index/(total-1); cx=cy=size*scale/2
+ def ellipse(box, fill, width): draw.ellipse(tuple(int(v*scale) for v in box), outline=fill, width=max(1,int(width*scale)))
+ # Expanding ripples replace the Pyro silhouette with a water splash.
+ for ring, start in enumerate((18,42,70)):
+  radius=start + t*88 + ring*3; fade=max(0,int(210 - t*180 - ring*25));
+  ellipse((cx/scale-radius,cy/scale-radius*0.62,cx/scale+radius,cy/scale+radius*0.62),(60,210,255,fade),2.5-ring*.35)
+  ellipse((cx/scale-radius*.88,cy/scale-radius*.55,cx/scale+radius*.88,cy/scale+radius*.55),(15,105,220,max(0,fade-55)),1.5)
+ # Curved splash crescents and droplets rotate around the impact point.
+ for j in range(9):
+  ang=math.radians(j*40 - 25 + t*90); dist=38+t*78+j*2; x=cx/scale+math.cos(ang)*dist; y=cy/scale+math.sin(ang)*dist*.68
+  r=2.5+(j%3)*1.2; alpha=max(0,int(220-t*170)); draw.ellipse((int((x-r)*scale),int((y-r*1.35)*scale),int((x+r)*scale),int((y+r*1.35)*scale)),fill=(100,225,255,alpha))
+ # Soft central water glow, with a hollow center so no elemental logo remains.
+ glow=Image.new('RGBA',canvas.size,(0,0,0,0)); gd=ImageDraw.Draw(glow); gr=34+int(t*20); gd.ellipse((cx-gr*scale,cy-gr*scale,cx+gr*scale,cy+gr*scale),fill=(35,170,255,max(0,70-int(t*50))))
+ glow=glow.filter(ImageFilter.GaussianBlur(12*scale)); canvas=Image.alpha_composite(canvas,glow)
+ canvas=canvas.resize((size,size),Image.Resampling.LANCZOS)
+ return canvas
 def anim_doc(genshin):
  assets=[]; layers=[]; bounds=None
  for i,a in enumerate(genshin['assets']):
-  im=Image.open(io.BytesIO(base64.b64decode(a['p'].split(',',1)[1]))).convert('RGBA'); im=recolor(im)
+  im=water_frame(i, len(genshin['assets']))
   b=im.getchannel('A').point(lambda x:255 if x>=16 else 0).getbbox()
   if b: bounds=[min(bounds[0],b[0]-144) if bounds else b[0]-144,min(bounds[1],b[1]-144) if bounds else b[1]-144,max(bounds[2],b[2]-144) if bounds else b[2]-144,max(bounds[3],b[3]-144) if bounds else b[3]-144]
   ident=f'frame_{i}'; assets.append({'id':ident,'w':im.width,'h':im.height,'u':'','e':1,'p':'data:image/png;base64,'+base64.b64encode(png(im)).decode()})
