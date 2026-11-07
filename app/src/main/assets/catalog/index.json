@@ -374,6 +374,20 @@
         "aod"
       ],
       "style_label": "White Pyro"
+    },
+    {
+      "tag": "hydro",
+      "file": "icons_hydro.json",
+      "frames": 1,
+      "source": [
+        "user attachment: hydro emblem"
+      ],
+      "source_sha256": "eb6750b3040008bd34dda7cd7db701a6e5a4ed3da0b3ba985d9786a4e4223af3",
+      "variants": [
+        "light",
+        "aod"
+      ],
+      "style_label": "White Hydro"
     }
   ],
   "animations": [
@@ -1228,6 +1242,16 @@
           "label": "Disappear"
         }
       ]
+    },
+    {
+      "tag": "hydro",
+      "file": "animations_hydro.json",
+      "frames": 24,
+      "source": [
+        "derived from animations_genshin.json"
+      ],
+      "source_sha256": "eb6750b3040008bd34dda7cd7db701a6e5a4ed3da0b3ba985d9786a4e4223af3",
+      "style_label": "Hydro"
     }
   ],
   "aliases": {

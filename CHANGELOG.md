@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.9 - 2026-11-07
+
+- Add the white Hydro fingerprint family and a new blue water animation derived from the Pyro timing and composition.
+- Optically recenter the Pyro fingerprint artwork.
+
 ## 1.0.8 - 2026-11-07
 
 - Center the Pyro fingerprint layer on the Samsung sensor footprint.

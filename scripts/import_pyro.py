@@ -33,6 +33,19 @@ def extract_shape():
     out = Image.new('RGBA', (216, 216), (255,255,255,0))
     x,y = (216-size[0])//2, (216-size[1])//2
     out.paste((255,255,255,255), (x,y), a)
+    # Optical centering: the detached lower/side forms make the alpha centroid
+    # differ slightly from the rectangular bounds center.
+    mass = sx = sy = 0
+    for py in range(216):
+        for px in range(216):
+            weight = out.getpixel((px, py))[3]
+            mass += weight; sx += px * weight; sy += py * weight
+    dx = round(108 - sx / mass)
+    dy = round(108 - sy / mass)
+    if dx or dy:
+        shifted = Image.new('RGBA', out.size, (255,255,255,0))
+        shifted.alpha_composite(out, (dx, dy))
+        out = shifted
     return out
 
 def document(image, tag, color):
