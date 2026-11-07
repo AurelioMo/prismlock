@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.7 - 2026-11-07
+
+- Add a white Pyro fingerprint family with light/AOD variants, ready to pair with the existing Genshin touch animation.
+
 ## 1.0.6 - 2026-11-06
 
 - Center Keqing animation bounds so the visible effect stays aligned with the fingerprint sensor.

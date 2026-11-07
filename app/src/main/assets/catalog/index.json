@@ -360,6 +360,20 @@
         "light",
         "aod"
       ]
+    },
+    {
+      "tag": "pyro",
+      "file": "icons_pyro.json",
+      "frames": 1,
+      "source": [
+        "user attachment: pyro emblem"
+      ],
+      "source_sha256": "ce2e93b79948bfc58c3f776b7eca27a0e4296e4c7d182814264e16acff1af0d0",
+      "variants": [
+        "light",
+        "aod"
+      ],
+      "style_label": "White Pyro"
     }
   ],
   "animations": [
