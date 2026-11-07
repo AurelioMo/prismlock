@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1 - 2026-11-07
+
+- Enlarge the Hydro water effect and center its vertical footprint to match the Pyro animation.
+
 ## 1.1.0 - 2026-11-07
 
 - Replace the Hydro recolor with a new water ripple and splash animation without an elemental logo in the center.

@@ -27,10 +27,10 @@ def water_frame(index, total=24):
  t=index/(total-1); cx=cy=size*scale/2
  def ellipse(box, fill, width): draw.ellipse(tuple(int(v*scale) for v in box), outline=fill, width=max(1,int(width*scale)))
  # Expanding ripples replace the Pyro silhouette with a water splash.
- for ring, start in enumerate((18,42,70)):
+ for ring, start in enumerate((22,50,78)):
   radius=start + t*88 + ring*3; fade=max(0,int(210 - t*180 - ring*25));
-  ellipse((cx/scale-radius,cy/scale-radius*0.62,cx/scale+radius,cy/scale+radius*0.62),(60,210,255,fade),2.5-ring*.35)
-  ellipse((cx/scale-radius*.88,cy/scale-radius*.55,cx/scale+radius*.88,cy/scale+radius*.55),(15,105,220,max(0,fade-55)),1.5)
+  ellipse((cx/scale-radius,cy/scale-radius*0.84,cx/scale+radius,cy/scale+radius*0.84),(60,210,255,fade),2.5-ring*.35)
+  ellipse((cx/scale-radius*.88,cy/scale-radius*.74,cx/scale+radius*.88,cy/scale+radius*.74),(15,105,220,max(0,fade-55)),1.5)
  # Curved splash crescents and droplets rotate around the impact point.
  for j in range(9):
   ang=math.radians(j*40 - 25 + t*90); dist=38+t*78+j*2; x=cx/scale+math.cos(ang)*dist; y=cy/scale+math.sin(ang)*dist*.68
