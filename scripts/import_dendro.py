@@ -10,7 +10,7 @@ def extract(src):
  im=Image.open(src).convert('RGB'); p=im.load(); a=Image.new('L',im.size); ap=a.load()
  for y in range(im.height):
   for x in range(im.width):
-   v=max(p[x,y]); ap[x,y]=v if v>=18 else 0
+   v=max(p[x,y]); ap[x,y]=255 if v>=18 else 0
  b=a.getbbox(); im=im.crop(b); a=a.crop(b); scale=min(190/im.width,190/im.height); size=(round(im.width*scale),round(im.height*scale)); a=a.resize(size,Image.Resampling.LANCZOS)
  out=Image.new('RGBA',(216,216),(255,255,255,0)); x,y=(216-size[0])//2,(216-size[1])//2; out.paste((255,255,255,255),(x,y),a)
  mass=sx=sy=0

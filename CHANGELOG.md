@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.6 - 2026-11-07
+
+- Make the Dendro fingerprint fully opaque white instead of preserving the source artwork's green shading.
+
 ## 1.1.5 - 2026-11-07
 
 - Add the centered white Dendro fingerprint family with light/AOD variants.
