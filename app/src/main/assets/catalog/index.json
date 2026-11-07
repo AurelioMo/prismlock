@@ -388,6 +388,20 @@
         "aod"
       ],
       "style_label": "White Hydro"
+    },
+    {
+      "tag": "dendro",
+      "file": "icons_dendro.json",
+      "frames": 1,
+      "source": [
+        "user attachment: dendro emblem"
+      ],
+      "source_sha256": "1dcbd716f5fb4e2673cbfa3d96c199852205173e8382f3b610214b44a59e00a6",
+      "variants": [
+        "light",
+        "aod"
+      ],
+      "style_label": "White Dendro"
     }
   ],
   "animations": [

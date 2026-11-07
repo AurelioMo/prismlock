@@ -14,6 +14,7 @@ claim ownership over them or relicense them.
 | Keqing symbol and visual sequences | User-supplied `KeqingFingerPrint.apk` resource overlay | Original artwork remains with its respective owners; original artist identity is not established by the APK. Exact source SHA-256/member provenance is recorded in the catalog and [audit](catalog-audit.md). |
 | Pyro symbol | User-supplied Pyro emblem image in the project request; converted to a white fingerprint icon for the catalog. | Source artwork remains with its respective owners. |
 | Hydro symbol | User-supplied Hydro emblem image in the project request; converted to a white fingerprint icon. The Hydro animation is derived locally from the existing Pyro/Genshin frame timing. | Source artwork remains with its respective owners. |
+| Dendro symbol | User-supplied Dendro emblem image in the project request; converted to a centered white fingerprint icon. | Source artwork remains with its respective owners. |
 | PrismLock logo | User-supplied generated prism image | Provided as project branding. |
 | Gradle wrapper | Gradle 8.13 generated wrapper | Generated files contain upstream notices; distribution checksum is pinned. |
 | libxposed API | `io.github.libxposed:api:102.0.0` | Compile-only dependency, not bundled as module implementation. |

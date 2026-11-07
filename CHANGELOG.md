@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.5 - 2026-11-07
+
+- Add the centered white Dendro fingerprint family with light/AOD variants.
+
 ## 1.1.4 - 2026-11-07
 
 - Notify users when the background update checker finds a new stable release.
