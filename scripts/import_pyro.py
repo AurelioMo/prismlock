@@ -44,7 +44,7 @@ def document(image, tag, color):
     bounds = [bbox[0]-108, bbox[1]-108, bbox[2]-108, bbox[3]-108]
     asset = dict(id='frame_0', w=216, h=216, u='', e=1, p=encoded)
     layer = dict(ddd=0, ind=1, ty=2, nm='frame_0', refId='frame_0', sr=1, ip=0, op=90, st=0, bm=0,
-                 ks=dict(o=dict(a=0,k=100), r=dict(a=0,k=0), p=dict(a=0,k=[108,108,0]),
+                 ks=dict(o=dict(a=0,k=100), r=dict(a=0,k=0), p=dict(a=0,k=[144,144,0]),
                          a=dict(a=0,k=[108,108,0]), s=dict(a=0,k=[100,100,100])))
     return dict(v='5.9.1', fr=120, ip=0, op=90, w=288, h=288, nm=tag, ddd=0,
                 assets=[asset], layers=[layer], markers=[], catalogBounds=bounds,

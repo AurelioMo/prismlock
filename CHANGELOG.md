@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.8 - 2026-11-07
+
+- Center the Pyro fingerprint layer on the Samsung sensor footprint.
+- Show the existing Genshin animation as “Pyro” in the catalog.
+
 ## 1.0.7 - 2026-11-07
 
 - Add a white Pyro fingerprint family with light/AOD variants, ready to pair with the existing Genshin touch animation.
