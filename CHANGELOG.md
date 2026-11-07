@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.3 - 2026-11-07
+
+- Remove Hailuo's remaining black plate/compression haze from Hydro frames.
+- Reduce the Hydro effect footprint to match the fingerprint sensor size.
+
 ## 1.1.2 - 2026-11-07
 
 - Optimize the supplied Hailuo Hydro animation to 24 transparent 288px frames at 0.8 seconds.

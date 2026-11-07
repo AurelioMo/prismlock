@@ -12,12 +12,15 @@ def main():
  indices=[round(i*47/23) for i in range(24)]
  bounds=None
  for i in indices:
-  a=raw['assets'][i]; im=Image.open(io.BytesIO(base64.b64decode(a['p'].split(',',1)[1]))).convert('RGBA').resize((288,288),Image.Resampling.LANCZOS)
+  a=raw['assets'][i]; im=Image.open(io.BytesIO(base64.b64decode(a['p'].split(',',1)[1]))).convert('RGBA')
   px=im.load()
-  for y in range(288):
-   for x in range(288):
+  for y in range(im.height):
+   for x in range(im.width):
     r,g,b,_=px[x,y]; alpha=max(r,g,b)
-    px[x,y]=(r,g,b,alpha)
+    # Remove Hailuo's opaque black plate and its low-level compression haze.
+    px[x,y]=(r,g,b,alpha if alpha >= 18 else 0)
+  im=im.resize((230,230),Image.Resampling.LANCZOS)
+  framed=Image.new('RGBA',(288,288),(0,0,0,0)); framed.alpha_composite(im,(29,29)); im=framed
   visible=im.getchannel('A').point(lambda v:255 if v>=16 else 0).getbbox()
   if visible:
    box=[visible[0]-144,visible[1]-144,visible[2]-144,visible[3]-144]
