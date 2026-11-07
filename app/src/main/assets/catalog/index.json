@@ -1248,9 +1248,9 @@
       "file": "animations_hydro.json",
       "frames": 24,
       "source": [
-        "derived from animations_genshin.json"
+        "user-supplied Hailuo Hydro Lottie export"
       ],
-      "source_sha256": "eb6750b3040008bd34dda7cd7db701a6e5a4ed3da0b3ba985d9786a4e4223af3",
+      "source_sha256": "4f8eca81b5adf339bb9cde8fe6e02a80c9ea12121b8c05a02b2e6212a1ade30b",
       "style_label": "Hydro"
     }
   ],

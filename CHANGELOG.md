@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2 - 2026-11-07
+
+- Optimize the supplied Hailuo Hydro animation to 24 transparent 288px frames at 0.8 seconds.
+
 ## 1.1.1 - 2026-11-07
 
 - Enlarge the Hydro water effect and center its vertical footprint to match the Pyro animation.
