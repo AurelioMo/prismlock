@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.4 - 2026-11-07
+
+- Notify users when the background update checker finds a new stable release.
+
 ## 1.1.3 - 2026-11-07
 
 - Remove Hailuo's remaining black plate/compression haze from Hydro frames.

@@ -2,6 +2,11 @@ package io.github.aureliomo.prismlock;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.pm.PackageManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -20,6 +25,8 @@ public class MainActivity extends Activity {
     static final String PREFS = "cfg";
     private static final int MIN_SIZE = 30;      // seekbar 0..50 -> 30..80
     private static final int REQ_DARK = 1, REQ_LIGHT = 2, REQ_INSTALL_PERMISSION = 3;
+    private static final int REQ_NOTIFICATIONS = 4;
+    private static final String UPDATE_CHANNEL = "updates";
     private static WeakReference<MainActivity> foreground = new WeakReference<>(null);
     private static Intent pendingConfirmation;
 
@@ -28,6 +35,7 @@ public class MainActivity extends Activity {
     CatalogScreen catalogScreen;
     private TextView updateDetail;
     private UpdateChecker.Release pendingRelease;
+    private UpdateChecker.Release notificationRelease;
     private String offeredVersion = "";
 
     @Override protected void onResume() {
@@ -203,7 +211,44 @@ public class MainActivity extends Activity {
     private void offerUpdate(UpdateChecker.Release release) {
         if (release.version.equals(offeredVersion)) return;
         offeredVersion = release.version;
+        notifyUpdate(release);
         showUpdateDialog(release);
+    }
+
+    private void notifyUpdate(UpdateChecker.Release release) {
+        SharedPreferences preferences = preferences();
+        if (release.version.equals(preferences.getString("notified_update_version", ""))) return;
+        if (android.os.Build.VERSION.SDK_INT >= 33
+                && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED) {
+            notificationRelease = release;
+            requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, REQ_NOTIFICATIONS);
+            return;
+        }
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if (android.os.Build.VERSION.SDK_INT >= 26) {
+            manager.createNotificationChannel(new NotificationChannel(UPDATE_CHANNEL, "Updates", NotificationManager.IMPORTANCE_DEFAULT));
+        }
+        Intent intent = new Intent(this, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent pending = PendingIntent.getActivity(this, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        Notification.Builder builder = android.os.Build.VERSION.SDK_INT >= 26
+                ? new Notification.Builder(this, UPDATE_CHANNEL) : new Notification.Builder(this);
+        manager.notify(1001, builder.setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle("PrismLock update available")
+                .setContentText("Version " + release.version + " is ready to install.")
+                .setStyle(new Notification.BigTextStyle().bigText("Version " + release.version + " is ready to install."))
+                .setContentIntent(pending).setAutoCancel(true).build());
+        preferences.edit().putString("notified_update_version", release.version).apply();
+    }
+
+    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grants) {
+        super.onRequestPermissionsResult(requestCode, permissions, grants);
+        if (requestCode == REQ_NOTIFICATIONS && grants.length > 0
+                && grants[0] == PackageManager.PERMISSION_GRANTED && notificationRelease != null) {
+            UpdateChecker.Release release = notificationRelease;
+            notificationRelease = null;
+            notifyUpdate(release);
+        }
     }
 
     private void setUpdateStatus(String value) {
