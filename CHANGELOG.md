@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.7 - 2026-11-07
+
+- Optimize the Hailuo Dendro animation by removing the pink screen, cropping the portrait canvas and converting it to 24 transparent 288px frames at 0.8 seconds.
+
 ## 1.1.6 - 2026-11-07
 
 - Make the Dendro fingerprint fully opaque white instead of preserving the source artwork's green shading.

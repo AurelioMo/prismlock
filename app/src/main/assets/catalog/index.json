@@ -1266,6 +1266,16 @@
       ],
       "source_sha256": "4f8eca81b5adf339bb9cde8fe6e02a80c9ea12121b8c05a02b2e6212a1ade30b",
       "style_label": "Hydro"
+    },
+    {
+      "tag": "dendro",
+      "file": "animations_dendro.json",
+      "frames": 24,
+      "source": [
+        "user-supplied Hailuo Dendro Lottie export"
+      ],
+      "source_sha256": "fd54f6a315abcc7dee9a442aec618f69c8966158ef86cc2611bc7e856829cee7",
+      "style_label": "Dendro"
     }
   ],
   "aliases": {
