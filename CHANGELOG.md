@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.8 - 2026-11-07
+
+- Remove the remaining pink chroma-key plate from Dendro frames.
+- Slow the Dendro effect to 1.47 seconds for a more natural pace.
+
 ## 1.1.7 - 2026-11-07
 
 - Optimize the Hailuo Dendro animation by removing the pink screen, cropping the portrait canvas and converting it to 24 transparent 288px frames at 0.8 seconds.

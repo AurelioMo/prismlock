@@ -1270,7 +1270,7 @@
     {
       "tag": "dendro",
       "file": "animations_dendro.json",
-      "frames": 24,
+      "frames": 22,
       "source": [
         "user-supplied Hailuo Dendro Lottie export"
       ],
