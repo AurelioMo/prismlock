@@ -49,7 +49,7 @@ final class Catalog {
             case "keqing_disappear": return "Keqing · Disappear";
             case "pyro": return "Pyro";
             case "genshin": return "Pyro";
-            case "dendro": return "Dendro";
+            case "dendro": return "Anemo";
             case "coloros": return "ColorOS 17 · Ripple";
             case "coloros2": return "ColorOS 17 · Melodic stream";
             case "coloros3": return "ColorOS 17 · Fizz";

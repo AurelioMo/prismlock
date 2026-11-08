@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0 - 2026-11-07
+
+- Keep the Anemo fingerprint icon and remove the unfinished Anemo animation from the catalog.
+
+## 1.1.9 - 2026-11-07
+
+- Rename the current Dendro catalog family to Anemo in the user interface.
+
 ## 1.1.8 - 2026-11-07
 
 - Remove the remaining pink chroma-key plate from Dendro frames.
