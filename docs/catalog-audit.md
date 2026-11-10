@@ -48,8 +48,8 @@ not establish duplication. Numeric scores rank candidates for visual inspection;
 they do not automatically remove content.
 
 The baseline has 36 icon rows and 21 effect rows. After importing Keqing and
-consolidating repeated visual families, there are **30 icon families and 19 effect
-families**, representing 60 selectable artwork styles plus 14 theme/AOD resources.
+consolidating repeated visual families, there are **33 icon families and 20 effect
+families**, representing 64 selectable artwork styles plus 14 theme/AOD resources.
 The current audit covers 701 source frames, plus the explicit theme/AOD files.
 Different colors, materials or meaningful motion remain selectable styles.
 

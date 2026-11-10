@@ -48,8 +48,11 @@ public class CatalogFamiliesTest {
         }
         assertArrayEquals(Catalog.selected(app, "icons", "outline", 50),
                 Catalog.selected(app, "icons", "coloros17_bubble", 50));
-        assertEquals(30, Catalog.tags(app, "icons").size());
-        assertEquals(19, Catalog.tags(app, "animations").size());
+        // Keep the inventory assertion aligned with the current catalog index. The
+        // legacy identifiers above are intentionally broader than the visible
+        // families because several entries are now grouped as styles.
+        assertEquals(33, Catalog.tags(app, "icons").size());
+        assertEquals(20, Catalog.tags(app, "animations").size());
     }
 
     @Test public void alternateColorsRetainOneVisibleRowAndTheirOwnLightAodArtwork() throws Exception {

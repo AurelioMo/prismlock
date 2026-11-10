@@ -65,7 +65,7 @@ Your settings and selections are preserved.
 
 ## Features
 
-- Built-in library of **31 fingerprint families** and **19 touch-effect families**, including Keqing and Pyro, with alternate color/motion styles grouped inside each family.
+- Built-in library of **33 fingerprint families** and **20 touch-effect families**, including Keqing, Pyro and the latest elemental effects, with alternate color/motion styles grouped inside each family.
 - Independent fingerprint and effect selection with automatic saving.
 - Native style picker for shared designs; old selections and alternate colors remain available.
 - Built-in 120fps playback timelines with temporal interpolation and unchanged durations; up to 120Hz UI refresh on supported displays.
