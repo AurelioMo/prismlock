@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.7 - 2026-11-13
+
+- Make Dew wrap the fingerprint: the ring is drawn at 210 of the 288 canvas instead of 150, inside the same halo, so the drop surrounds the icon rather than sitting outside it.
+- Slow Dew down: each frame is held ten playback frames, which plays the whole pulse over 1.42 seconds instead of 0.57, the slowest the catalog gate allows.
+
 ## 1.4.6 - 2026-11-13
 
 - Add the Bloom fingerprint icon: the supplied fire flower is keyed off its black plate by an edge flood fill, so no haze is left behind the petals, and fitted to the shared photo-icon footprint.

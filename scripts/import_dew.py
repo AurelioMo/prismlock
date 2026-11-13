@@ -6,13 +6,15 @@ generated transparent frame.
 
 The clip is a nine second loop of a glass drop breathing in place, and its brightness
 oscillates with a period of about 62 frames. One whole pulse is taken — 16 frames four
-source frames apart — so the ripple plays exactly once over 0.57 seconds at 120fps,
-about four times the source pace.
+source frames apart — and each frame is held ten playback frames, so the ripple
+plays exactly once over 1.42 seconds at 120fps.
 
 The drop has to wrap the fingerprint instead of sitting on top of it, so the ring is
-drawn at 150 of the 288 canvas inside its own blurred, dimmed halo, as Pulse and Tide
+drawn at 210 of the 288 canvas inside its own blurred, dimmed halo, as Pulse and Tide
 do: the halo defines catalogBounds, which the runtime maps to the effect footprint,
-and the visible ring stays a little above the icon.
+and the visible ring surrounds the icon. Each frame is held ten playback frames,
+which stretches one pulse of the source to 1.42 seconds, the slowest the catalog
+gate allows.
 """
 import argparse
 import hashlib
@@ -28,7 +30,13 @@ DEFAULT_SOURCE = Path('/Users/aurelio/Downloads/e0ffd703768562ef2ea40a59ab4c80b3
 FRAMES = 16
 START = 55
 STRIDE = 4
-RING = 150
+# Each frame is held for STEP playback frames, so the pulse keeps the pace of the
+# source instead of flashing past in half a second. The catalog gate caps an effect
+# at 1.5 seconds, so this is the slowest the whole pulse can play: 1.42 seconds.
+STEP = 10
+# The ring has to wrap the icon, not sit outside it: 210 of the 288 canvas leaves the
+# fingerprint inside the drop while the halo below still defines the bounds.
+RING = 210
 HALO = 284
 HALO_ALPHA = 0.42
 HALO_BLUR = 16
@@ -86,7 +94,7 @@ def main():
         window = decoded[START:START + FRAMES * STRIDE:STRIDE]
         picked = normalize([boosted(frame) for frame in window])
     picked.append(Image.new('RGBA', (CANVAS, CANVAS), (0, 0, 0, 0)))
-    document = animation(picked, 'Dew')
+    document = animation(picked, 'Dew', step=STEP, source_fps=120 // STEP)
     document['source_sha256'] = digest
     (CATALOG / f'animations_{TAG}.json').write_text(json.dumps(document, separators=(',', ':')))
     (PREVIEWS / f'animations_{TAG}.png').write_bytes(png(preview(document)))
