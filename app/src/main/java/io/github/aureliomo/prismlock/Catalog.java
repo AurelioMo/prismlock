@@ -8,7 +8,9 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -18,6 +20,19 @@ final class Catalog {
     private static final Pattern FILE = Pattern.compile("(?:icons|animations)_[a-z0-9_]+\\.json");
 
     private static volatile CatalogIndex cachedIndex;
+
+    /**
+     * Prepared payloads are a pure function of (kind, tag, size): the bundled assets never
+     * change at runtime. Re-parsing a 2.8MB composition on every settings change was the
+     * most expensive step of a refresh, so the current pair is kept. The cache is capped at
+     * two entries because this runs inside Samsung's biometrics process.
+     */
+    private static final Map<String, byte[]> PREPARED = Collections.synchronizedMap(
+            new LinkedHashMap<String, byte[]>(4, 0.75f, true) {
+                @Override protected boolean removeEldestEntry(Map.Entry<String, byte[]> eldest) {
+                    return size() > 2;
+                }
+            });
 
     private static CatalogIndex index(Context context) throws Exception {
         CatalogIndex current = cachedIndex;
@@ -95,7 +110,11 @@ final class Catalog {
     static List<Style> styles(Context context, String kind, String tag) throws Exception { return index(context).styles(kind, tag); }
 
     static byte[] selected(Context context, String kind, String tag, int size) throws Exception {
-        JSONObject composition = new JSONObject(read(context, kind + "_" + resolve(context, kind, tag) + ".json"));
+        String resolved = resolve(context, kind, tag);
+        String key = kind + ':' + resolved + ':' + size;
+        byte[] prepared = PREPARED.get(key);
+        if (prepared != null) return prepared;
+        JSONObject composition = new JSONObject(read(context, kind + "_" + resolved + ".json"));
         JSONArray layers = composition.getJSONArray("layers");
         JSONArray assets = composition.getJSONArray("assets");
         JSONArray bounds = composition.getJSONArray("catalogBounds");
@@ -119,7 +138,9 @@ final class Catalog {
                     .put("k", new JSONArray().put(scale).put(scale).put(100));
         }
         if ("animations".equals(kind)) Motion.smooth(composition);
-        return composition.toString().getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = composition.toString().getBytes(StandardCharsets.UTF_8);
+        PREPARED.put(key, bytes);
+        return bytes;
     }
 
     static String iconTag(Context context, String tag, String variant) throws Exception {

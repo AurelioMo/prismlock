@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.View;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -67,10 +68,14 @@ public final class Hook extends XposedModule {
             hook(read).intercept(chain -> {
                 File file = (File) chain.getArg(0);
                 if (file != null && "user_fingerprint_touch_effect.json".equals(file.getName())) {
-                    refreshConfig(false);
-                    awaitFirstConfig();
+                    // Never fall through to a stale file left in Samsung's data dir: it
+                    // plays its own (older, longer) timeline instead of the selection.
+                    // Re-query every time: the observer alone left the previous effect in
+                    // place, and one binder read is cheap next to a wrong animation.
+                    refreshConfig(true);
+                    awaitRefresh();
                     RuntimeConfig snapshot = config;
-                    if (snapshot.enabled && snapshot.animation != null) return snapshot.animation;
+                    return snapshot.enabled ? snapshot.animation : null;
                 }
                 return chain.proceed();
             });
@@ -158,6 +163,26 @@ public final class Hook extends XposedModule {
                 });
             }
         });
+        // Samsung inflates the touch effect below the sensor icon, so a bright or large
+        // icon hides it. Raising the effect view keeps every animation visible.
+        optional("touch effect order", () -> {
+            Class<?> container = Class.forName(TARGET + ".fingerprint.vi.VisualEffectContainer", false, loader);
+            for (Method method : container.getDeclaredMethods()) {
+                if (!method.getName().equals("init") || method.getParameterCount() != 2) continue;
+                hook(method).intercept(chain -> {
+                    Object result = chain.proceed();
+                    Object target = chain.getThisObject();
+                    if (target instanceof View) {
+                        View view = (View) target;
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            try { view.bringToFront(); }
+                            catch (Throwable failure) { warnOnce("touch effect order", failure); }
+                        });
+                    }
+                    return result;
+                });
+            }
+        });
         optional("keyguard refresh", () -> {
             Class<?> window = Class.forName(TARGET + ".fingerprint.UdfpsKeyguardSensorWindow", false, loader);
             Field current = field(window, "mCurrentAnimationType");
@@ -206,6 +231,19 @@ public final class Hook extends XposedModule {
                 if (dirty.get()) refreshConfig(true);
             }
         });
+    }
+
+    /**
+     * Waits for the configuration read started for this asset so a fresh selection is
+     * not served from the previous snapshot. Bounded: Samsung's window must not block.
+     */
+    private void awaitRefresh() {
+        long deadline = SystemClock.elapsedRealtime() + 250;
+        while (refreshing.get() && SystemClock.elapsedRealtime() < deadline) {
+            try { Thread.sleep(4); }
+            catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); break; }
+        }
+        awaitFirstConfig();
     }
 
     /** Prevents the first authentication from racing the initial provider read. */

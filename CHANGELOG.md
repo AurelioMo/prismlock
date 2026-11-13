@@ -1,5 +1,81 @@
 # Changelog
 
+## 1.3.9 - 2026-11-12
+
+- Re-query the configuration whenever the touch effect is read: skipping the read when no change had been flagged kept serving the previous effect (Pulse) after switching animations.
+
+## 1.3.8 - 2026-11-12
+
+- Add the Snowflake icon, enlarge Lotus to the footprint of the glyph icons, cache prepared catalog payloads instead of re-parsing up to 2.8MB per change, and stop forcing a configuration rebuild on every effect read.
+
+## 1.3.7 - 2026-11-12
+
+- Remove the screen-off lead-in: shifting layer windows left the interpolated opacity keyframes behind, so short effects (Orbit 0.47s, Pulse 0.43s) played completely invisible.
+
+## 1.3.6 - 2026-11-12
+
+- Raise the touch effect above the sensor icon, so bright or large icons (Lotus, Orb) no longer hide white effects such as Orbit and Pulse.
+
+## 1.3.5 - 2026-11-12
+
+- Rebuild the Lotus icon from the new render: clean flood-filled cutout with no backdrop haze, fitted to the same footprint as the other icons, colour only.
+
+## 1.3.4 - 2026-11-12
+
+- Lotus: scale by the solid crystal instead of the faint bloom so it reads at the same size as the other icons, keep the glass slightly translucent, and log which effect payload is served.
+
+## 1.3.3 - 2026-11-12
+
+- Add the Lotus fingerprint icon from the supplied glass-flower render, with light and AOD variants.
+
+## 1.3.2 - 2026-11-12
+
+- Serve touch effects shorter than 0.5s with a silent lead-in while the display is off, so they still animate when unlocked from AOD or with the screen off.
+
+## 1.3.1 - 2026-11-12
+
+- Fix the Orb thumbnail: use the shared 112-unit preview footprint instead of the icon footprint, which overflowed the 144px tile.
+
+## 1.3.0 - 2026-11-12
+
+- Add the Orb fingerprint icon from the supplied glossy sphere render.
+
+## 1.2.9 - 2026-11-12
+
+- Always serve the selected touch effect and wait for the configuration read, so a stale effect file left in Samsung's data directory can no longer play instead of the selection.
+
+## 1.2.8 - 2026-11-12
+
+- Play the whole Pulse motion (all 25 pulse frames at a 60fps source cadence in 0.433 seconds) and seat the ring on a soft halo so it draws at about half the size of a full-bleed effect.
+
+## 1.2.7 - 2026-11-12
+
+- Fix the Pulse effect: sample the actual pulse frames instead of the still tail of the loop, and shrink the artwork so it sits on the sensor.
+
+## 1.2.6 - 2026-11-12
+
+- Add the Pulse effect: the supplied GIF loop keyed off its black plate, 13 consecutive frames at 0.467 seconds ending transparent.
+
+## 1.2.5 - 2026-11-12
+
+- Shorten the Orbit effect to 0.467 seconds, matching the shorter catalog effects, because Samsung only stops the effect view when the animation ends.
+
+## 1.2.4 - 2026-11-12
+
+- End the Orbit effect on a transparent frame with a fade, like the other effects, so it leaves the screen after unlocking.
+
+## 1.2.3 - 2026-11-12
+
+- Match the Orbit effect pacing and size to the other effects: 24 consecutive source frames at 0.8 seconds and artwork at 240 of the 288 canvas.
+
+## 1.2.2 - 2026-11-12
+
+- Fix the Orbit effect: 45 consecutive source frames at 1.5 seconds keep the original rotation pace instead of sampling the whole loop into 0.8 seconds, and the artwork now fills the shared effect footprint.
+
+## 1.2.1 - 2026-11-12
+
+- Add the Orbit effect: the supplied video loop keyed off its black plate and converted to 24 transparent 288px frames at 0.8 seconds.
+
 ## 1.2.0 - 2026-11-07
 
 - Keep the Anemo fingerprint icon and remove the unfinished Anemo animation from the catalog.
