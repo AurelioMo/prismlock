@@ -142,12 +142,11 @@ with the release tag, and the result is cached in preferences.
 
 `UpdateInstaller` downloads the APK over HTTPS, verifies the published SHA-256 digest
 when present, checks the package name, checks that the version code is newer, and
-requires the downloaded APK to be signed by the same certificate as the installed app.
-It then hands the file to the platform `PackageInstaller` session, which shows the
-confirmation sheet. The module never elevates privileges: there is no shell command,
-no privileged package install and no root detection anywhere on the update path.
-Updating keeps the package and its settings because every official release uses the
-same signing key, and release builds are signed with APK Signature Scheme v2 and v3.
+requires the downloaded APK to be signed by the same certificate as the installed
+app. Rooted devices install through `pm install -r`; otherwise the platform
+`PackageInstaller` flow asks for confirmation. Updating keeps the package and its
+settings because every official release uses the same signing key, and release builds
+are signed with APK Signature Scheme v2 and v3.
 
 If the install permission is missing, the foreground activity opens the app-specific
 unknown-sources settings. A persisted pending-update filename allows resumption after

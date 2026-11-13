@@ -23,7 +23,7 @@ Samsung devices and One UI builds, not only on one model or firmware version.
 Open the newest release, expand **Assets**, and download `PrismLock-*.apk`.
 The source ZIP/TAR files are not installable apps.
 
-Current version: **1.4.1**.
+Current version: **1.4.2**.
 
 ## Compatibility
 
@@ -59,12 +59,9 @@ foreground. A newer stable version is offered directly on the current screen;
 **Settings → App → Updates** also lets you check manually. Concurrent checks share
 one network request, and a failed request can be retried immediately.
 
-The APK is downloaded by PrismLock, verified against the release digest and against the
-signing certificate of the installed app, and then handed to Android's own system
-installer, which shows its confirmation sheet. Nothing on the update path uses root:
-there is no shell command and no privileged invocation, only the standard
-install-packages permission every sideloaded updater needs. Your settings and selections
-are preserved.
+The APK is downloaded directly from GitHub and installed in place. Rooted devices use
+a silent `pm install`; otherwise Android's system installer asks for confirmation.
+Your settings and selections are preserved.
 
 ## Features
 
@@ -82,7 +79,7 @@ are preserved.
 - Modern libxposed API 102 integration with background configuration loading.
 - Recycled catalog rows and asynchronous thumbnail/wallpaper loading.
 - Enlarged icon glows can extend beyond the Lottie artboard on compatible Samsung renderers.
-- In-app GitHub update checker and installer, with automatic foreground checks and no root path.
+- In-app GitHub update checker and installer, with automatic foreground checks.
 
 The module changes visual resources only. It does not change authentication,
 enrollment, illumination masks, brightness control or sensor behavior.

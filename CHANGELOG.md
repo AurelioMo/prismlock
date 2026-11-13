@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.2 - 2026-11-13
+
+- Restore the 1.2.0 update system unchanged: the module downloads the release APK, verifies digest, package and signing certificate, installs silently through the root path when the device is rooted and hands the file to Android's system installer otherwise, with the permission resume and the install-status callback back in place.
+
 ## 1.4.1 - 2026-11-13
 
 - Bring back the in-app update installer, without root. The module downloads and verifies the APK and hands it to Android's system installer, which asks for confirmation; the root switch that ran a privileged package install is gone, so the update path never spawns a shell.

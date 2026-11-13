@@ -15,6 +15,7 @@ import android.os.Looper;
 import android.provider.Settings;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -26,6 +27,7 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /** Downloads, verifies and installs a release APK. */
 final class UpdateInstaller {
@@ -59,6 +61,8 @@ final class UpdateInstaller {
         }
     }
 
+    private enum RootResult { SUCCESS, UNAVAILABLE, FAILED }
+
     private UpdateInstaller() {
     }
 
@@ -69,10 +73,20 @@ final class UpdateInstaller {
                 File apk = download(app, release, callback);
                 postStatus(callback, "Verifying update\u2026");
                 verify(app, apk);
-                postStatus(callback, "Opening the system installer\u2026");
-                installWithSession(app, apk);
-                postFinished(callback, new Result(true,
-                        "Follow the system installer to finish updating PrismLock."));
+                postStatus(callback, "Installing " + release.version + "\u2026");
+                RootResult root = installWithRoot(app, apk);
+                if (root == RootResult.SUCCESS) {
+                    postFinished(callback, new Result(true,
+                            "PrismLock " + release.version
+                                    + " installed. Reopen the app or reboot to load the new module code."));
+                    return;
+                }
+                if (root == RootResult.UNAVAILABLE || root == RootResult.FAILED) {
+                    postStatus(callback, "Opening the system installer\u2026");
+                    installWithSession(app, apk);
+                    postFinished(callback, new Result(true,
+                            "Follow the system installer to finish updating PrismLock."));
+                }
             } catch (UnknownSourcesException exception) {
                 postFinished(callback, new Result(false, exception.getMessage(), true));
             } catch (Throwable throwable) {
@@ -174,6 +188,39 @@ final class UpdateInstaller {
         }
         if (versionCode(archive) <= versionCode(installed)) {
             throw new IOException("The downloaded release is not newer than the installed version.");
+        }
+    }
+
+    private static RootResult installWithRoot(Context context, File apk) {
+        Process process = null;
+        try {
+            String command = "cp " + quote(apk.getAbsolutePath())
+                    + " /data/local/tmp/prismlock-update.apk"
+                    + " && chmod 644 /data/local/tmp/prismlock-update.apk"
+                    + " && pm install -r /data/local/tmp/prismlock-update.apk"
+                    + "; result=$?; rm -f /data/local/tmp/prismlock-update.apk; exit $result";
+            process = new ProcessBuilder("su", "-c", command).redirectErrorStream(true).start();
+            final Process running = process;
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            Thread reader = new Thread(() -> copyQuietly(running.getInputStream(), output),
+                    "prismlock-pm-output");
+            reader.setDaemon(true);
+            reader.start();
+            boolean finished = process.waitFor(120, TimeUnit.SECONDS);
+            if (!finished) {
+                process.destroy();
+                return RootResult.FAILED;
+            }
+            reader.join(1_000L);
+            String result = output.toString("UTF-8");
+            return process.exitValue() == 0 && result.contains("Success")
+                    ? RootResult.SUCCESS : RootResult.FAILED;
+        } catch (IOException exception) {
+            return RootResult.UNAVAILABLE;
+        } catch (Throwable throwable) {
+            return RootResult.FAILED;
+        } finally {
+            if (process != null) process.destroy();
         }
     }
 
@@ -294,10 +341,22 @@ final class UpdateInstaller {
         return version == null ? "update" : version.replaceAll("[^a-zA-Z0-9._-]", "_");
     }
 
+    private static String quote(String value) {
+        return "'" + value.replace("'", "'\\''") + "'";
+    }
+
     private static void copy(InputStream input, OutputStream output) throws IOException {
         byte[] buffer = new byte[64 * 1024];
         int count;
         while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+    }
+
+    private static void copyQuietly(InputStream input, ByteArrayOutputStream output) {
+        try {
+            copy(input, output);
+        } catch (IOException ignored) {
+            // The install result is read from the exit code.
+        }
     }
 
     private static void delete(File file) {

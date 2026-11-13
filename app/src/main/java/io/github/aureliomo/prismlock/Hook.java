@@ -198,12 +198,16 @@ public final class Hook extends XposedModule {
 
     private void attachContext(Context context) {
         app = context;
-        observer = new ContentObserver(main) {
-            @Override public void onChange(boolean selfChange) { refreshConfig(true); }
-        };
-        try {
-            context.getContentResolver().registerContentObserver(CFG, false, observer);
-        } catch (Exception failure) { warnOnce("configuration observer", failure); }
+        // Application.attach can run again after a process restart in place; a second
+        // observer would double every refresh, so the first registration is kept.
+        if (observer == null) {
+            observer = new ContentObserver(main) {
+                @Override public void onChange(boolean selfChange) { refreshConfig(true); }
+            };
+            try {
+                context.getContentResolver().registerContentObserver(CFG, false, observer);
+            } catch (Exception failure) { warnOnce("configuration observer", failure); }
+        }
         refreshConfig(true);
     }
 
