@@ -51,8 +51,8 @@ public class CatalogFamiliesTest {
         // Keep the inventory assertion aligned with the current catalog index. The
         // legacy identifiers above are intentionally broader than the visible
         // families because several entries are now grouped as styles.
-        assertEquals(36, Catalog.tags(app, "icons").size());
-        assertEquals(23, Catalog.tags(app, "animations").size());
+        assertEquals(37, Catalog.tags(app, "icons").size());
+        assertEquals(24, Catalog.tags(app, "animations").size());
     }
 
     @Test public void alternateColorsRetainOneVisibleRowAndTheirOwnLightAodArtwork() throws Exception {

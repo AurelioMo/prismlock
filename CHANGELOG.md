@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.6 - 2026-11-13
+
+- Add the Bloom fingerprint icon: the supplied fire flower is keyed off its black plate by an edge flood fill, so no haze is left behind the petals, and fitted to the shared photo-icon footprint.
+- Add the Dew touch effect: sixteen frames four source frames apart cover one full pulse of the glass drop over 0.57 seconds at 120fps, and the ring is drawn at 150 of the 288 canvas inside a blurred halo so it wraps the fingerprint as an aura. The keyed alpha is lifted, because the dark glass only lights up on its rim.
+
 ## 1.4.5 - 2026-11-13
 
 - Make Tide an aura around the sensor instead of a ring floating above it. The runtime maps an effect's catalogBounds to a fixed footprint, and Tide's crop filled its own bounds, so a tight ring was drawn at full size. The ring is now drawn at 150 of the 288 canvas inside its own blurred, dimmed halo, which puts the bounds at 284 like Pulse and leaves the visible ring close to the fingerprint.

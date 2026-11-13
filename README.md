@@ -23,7 +23,7 @@ Samsung devices and One UI builds, not only on one model or firmware version.
 Open the newest release, expand **Assets**, and download `PrismLock-*.apk`.
 The source ZIP/TAR files are not installable apps.
 
-Current version: **1.4.5**.
+Current version: **1.4.6**.
 
 ## Compatibility
 
@@ -65,7 +65,7 @@ Your settings and selections are preserved.
 
 ## Features
 
-- Built-in library of **36 fingerprint families** and **23 touch-effect families**, including Keqing, Pyro, Orbit, Pulse, Tide, Orb, Lotus and Snowflake, with alternate color/motion styles grouped inside each family.
+- Built-in library of **37 fingerprint families** and **24 touch-effect families**, including Keqing, Pyro, Orbit, Pulse, Tide, Dew, Orb, Lotus, Bloom and Snowflake, with alternate color/motion styles grouped inside each family.
 - Independent fingerprint and effect selection with automatic saving.
 - Native style picker for shared designs; old selections and alternate colors remain available.
 - Built-in 120fps playback timelines with temporal interpolation and unchanged durations; up to 120Hz UI refresh on supported displays.
@@ -125,7 +125,8 @@ Report bugs and suggestions through **[Issues](https://github.com/AurelioMo/pris
 Original catalog reference and artwork: **custombeta / Fingerprint Catalog**.
 Samsung integration research: **ELPEDR / RingPrint**.
 Aqua animation, Prism/Vortex/Orbit/Neon/Orb/Lotus/Snowflake artwork, the Orbit,
-Pulse and Tide effects and the PrismLock logo were supplied for this project. Samsung resources retain their respective ownership.
+Pulse, Tide and Dew effects, the Bloom icon and the PrismLock logo were supplied for
+this project. Samsung resources retain their respective ownership.
 PrismLock is not affiliated with Samsung, Xiaomi, Good Lock or LSPosed.
 
 Third-party materials are credited here and in

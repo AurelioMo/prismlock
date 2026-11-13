@@ -425,6 +425,14 @@
       "external_source": "6d3e6dae6d49afdd2f210bef81f24b3f.jpg",
       "source_sha256": "014a75f4059c669166064199b51b0dd0888bd489b9c959d8431d87f687d9f1aa",
       "style_label": "Crystal Snowflake"
+    },
+    {
+      "tag": "bloom",
+      "file": "icons_bloom.json",
+      "frames": 1,
+      "external_source": "925689f5748dac3c47708169992ff56b.jpg",
+      "source_sha256": "9b29cdc9e535c62ea6fb4f48b5c0c4ec7f7c4fc4ed36889c502e0c1d9aa3b3b3",
+      "style_label": "Fire Bloom"
     }
   ],
   "animations": [
@@ -1313,6 +1321,14 @@
       "terminal_frame": "generated-transparent",
       "external_source": "915d00b7556e4079f5d14930d3ac720a_t3.mp4",
       "source_sha256": "913ee2b2f0e97a4d9d3c2833e299f1bb9d70e627dd77c1045ca5f96943bfa74a"
+    },
+    {
+      "tag": "dew",
+      "file": "animations_dew.json",
+      "frames": 17,
+      "terminal_frame": "generated-transparent",
+      "external_source": "e0ffd703768562ef2ea40a59ab4c80b3_t3.mp4",
+      "source_sha256": "d1dae4360be467412addcea67efedea1f085bfe806bd7da335dcdfdd04617f34"
     }
   ],
   "aliases": {
