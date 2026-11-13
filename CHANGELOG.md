@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.1 - 2026-11-13
+
+- Bring back the in-app update installer, without root. The module downloads and verifies the APK and hands it to Android's system installer, which asks for confirmation; the root switch that ran a privileged package install is gone, so the update path never spawns a shell.
+
 ## 1.4.0 - 2026-11-13
 
 - Stop downloading and installing update packages inside the app. The module no longer requests the install-packages permission, no longer runs `pm install` through root and no longer hosts a package-install receiver; the update prompt and the update notification open the GitHub release page, where Android's own installer handles the APK.
