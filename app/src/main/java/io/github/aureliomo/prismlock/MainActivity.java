@@ -24,7 +24,7 @@ import java.lang.ref.WeakReference;
 public class MainActivity extends Activity {
     static final String PREFS = "cfg";
     private static final int MIN_SIZE = 30;      // seekbar 0..50 -> 30..80
-    private static final int REQ_DARK = 1, REQ_LIGHT = 2, REQ_INSTALL_PERMISSION = 3;
+    private static final int REQ_DARK = 1, REQ_LIGHT = 2;
     private static final int REQ_NOTIFICATIONS = 4;
     private static final String UPDATE_CHANNEL = "updates";
     private static WeakReference<MainActivity> foreground = new WeakReference<>(null);
@@ -50,8 +50,6 @@ public class MainActivity extends Activity {
             Intent confirmation = pendingConfirmation;
             pendingConfirmation = null;
             showInstallConfirmation(confirmation);
-        } else if (UpdateInstaller.takePermissionResume(this)) {
-            startUpdate(null);
         }
     }
 
@@ -235,8 +233,8 @@ public class MainActivity extends Activity {
                 ? new Notification.Builder(this, UPDATE_CHANNEL) : new Notification.Builder(this);
         manager.notify(1001, builder.setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle("PrismLock update available")
-                .setContentText("Version " + release.version + " is ready to install.")
-                .setStyle(new Notification.BigTextStyle().bigText("Version " + release.version + " is ready to install."))
+                .setContentText("Version " + release.version + " is available on GitHub.")
+                .setStyle(new Notification.BigTextStyle().bigText("Version " + release.version + " is available on GitHub."))
                 .setContentIntent(pending).setAutoCancel(true).build());
         preferences.edit().putString("notified_update_version", release.version).apply();
     }
@@ -265,7 +263,7 @@ public class MainActivity extends Activity {
                 .setMessage(message)
                 .setNegativeButton("Release page", (dialog, which) -> openReleases())
                 .setNeutralButton("Later", null)
-                .setPositiveButton("Update", (dialog, which) -> startUpdate(release))
+                .setPositiveButton("Download", (dialog, which) -> openReleases())
                 .show();
     }
 
@@ -278,64 +276,9 @@ public class MainActivity extends Activity {
                 .show();
     }
 
+    /** Updates are downloaded by the browser: the module no longer installs packages itself. */
     private void startUpdate(UpdateChecker.Release release) {
-        LinearLayout body = catalogScreen.column();
-        body.setPadding(dp(24), dp(16), dp(24), dp(8));
-        TextView status = catalogScreen.text(release == null ? "Opening the system installer\u2026"
-                : "Downloading " + release.version + "\u2026",
-                15, 400, catalogScreen.foreground);
-        ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        bar.setMax(100);
-        bar.setProgress(0);
-        body.addView(status);
-        LinearLayout.LayoutParams barLayout = new LinearLayout.LayoutParams(-1, dp(24));
-        barLayout.topMargin = dp(12);
-        body.addView(bar, barLayout);
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("Updating PrismLock")
-                .setView(body)
-                .setCancelable(false)
-                .create();
-        dialog.show();
-        UpdateInstaller.Callback callback = new UpdateInstaller.Callback() {
-            @Override public void onProgress(int percent) {
-                if (isFinishing() || isDestroyed()) return;
-                bar.setProgress(percent);
-                status.setText("Downloading update\u2026 " + percent + "%");
-            }
-
-            @Override public void onStatus(String message) {
-                if (isFinishing() || isDestroyed()) return;
-                bar.setIndeterminate(true);
-                status.setText(message);
-            }
-
-            @Override public void onFinished(UpdateInstaller.Result result) {
-                if (isFinishing() || isDestroyed()) return;
-                dialog.dismiss();
-                if (result.needsPermission) {
-                    UpdateInstaller.waitingForPermission(MainActivity.this, true);
-                    try {
-                        startActivityForResult(UpdateInstaller.unknownSourcesIntent(MainActivity.this),
-                                REQ_INSTALL_PERMISSION);
-                    } catch (Exception exception) {
-                        UpdateInstaller.waitingForPermission(MainActivity.this, false);
-                        toast("Open Settings and allow PrismLock to install unknown apps, then retry Update.");
-                    }
-                } else if (result.success) {
-                    toast(result.message);
-                } else {
-                    new AlertDialog.Builder(MainActivity.this)
-                            .setTitle("Update did not finish")
-                            .setMessage(result.message)
-                            .setNegativeButton("Close", null)
-                            .setPositiveButton("Open GitHub", (dialog, which) -> openReleases())
-                            .show();
-                }
-            }
-        };
-        if (release == null) UpdateInstaller.resumeInstall(this, callback);
-        else UpdateInstaller.downloadAndInstall(this, release, callback);
+        openReleases();
     }
 
     private void openReleases() {
@@ -377,15 +320,6 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int req, int res, Intent data) {
         super.onActivityResult(req, res, data);
-        if (req == REQ_INSTALL_PERMISSION) {
-            // Settings may return RESULT_CANCELED even when the permission was granted.
-            // onResume checks the permission itself and consumes the pending update once.
-            if (!getPackageManager().canRequestPackageInstalls()) {
-                UpdateInstaller.waitingForPermission(this, false);
-                toast("Installation permission was not granted. Tap Update to try again.");
-            }
-            return;
-        }
         if (res != RESULT_OK || data == null || data.getData() == null) return;
         if (req == REQ_DARK) importUri(data.getData(), "dark");
         else if (req == REQ_LIGHT) importUri(data.getData(), "light");

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0 - 2026-11-13
+
+- Stop downloading and installing update packages inside the app. The module no longer requests the install-packages permission, no longer runs `pm install` through root and no longer hosts a package-install receiver; the update prompt and the update notification open the GitHub release page, where Android's own installer handles the APK.
+- Centre the launcher icon on the opaque artwork instead of its bounding box, because the light beam on the right made the diamond sit left of centre, and fit the logo without stretching it.
+
 ## 1.3.9 - 2026-11-12
 
 - Re-query the configuration whenever the touch effect is read: skipping the read when no change had been flagged kept serving the previous effect (Pulse) after switching animations.

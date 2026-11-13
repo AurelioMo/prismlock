@@ -14,8 +14,8 @@ android {
         applicationId 'io.github.aureliomo.prismlock'
         minSdk 26
         targetSdk 34
-        versionCode 139
-        versionName '1.3.9'
+        versionCode 140
+        versionName '1.4.0'
     }
     signingConfigs {
         release {
@@ -24,6 +24,9 @@ android {
                 storePassword signingPassword
                 keyAlias 'prismlock'
                 keyPassword signingKeyPassword
+                enableV1Signing false
+                enableV2Signing true
+                enableV3Signing true
             }
         }
     }

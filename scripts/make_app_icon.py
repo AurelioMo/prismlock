@@ -47,12 +47,40 @@ def cutout(source):
     return art.crop(bounds)
 
 
+def solid_centre(art):
+    """Centre of the opaque artwork, not of the bounding box.
+
+    The render has a faint beam leaving to the right, so its bounding box is
+    wider on that side and centring on it pushes the diamond off centre.
+    """
+    solid = art.getchannel('A').point(lambda value: 255 if value >= 200 else 0)
+    samples = 64
+    grid = solid.resize((samples, samples), Image.Resampling.BOX).load()
+    weight = sum_x = sum_y = 0
+    for y in range(samples):
+        for x in range(samples):
+            value = grid[x, y]
+            if value:
+                weight += value
+                sum_x += value * (x + 0.5)
+                sum_y += value * (y + 0.5)
+    if not weight:
+        return art.width / 2, art.height / 2
+    return (sum_x / weight * art.width / samples,
+            sum_y / weight * art.height / samples)
+
+
 def square(art, size, ratio):
-    """Logo scaled to `ratio` of a square canvas and centred, transparent elsewhere."""
+    """Artwork fitted to `ratio` of a square canvas, undistorted and centred."""
     canvas = Image.new('RGBA', (size, size), (0, 0, 0, 0))
     inner = max(1, round(size * ratio))
-    scaled = art.resize((inner, inner), Image.Resampling.LANCZOS)
-    canvas.paste(scaled, ((size - inner) // 2, (size - inner) // 2), scaled)
+    scale = inner / max(art.width, art.height)
+    scaled = art.resize((max(1, round(art.width * scale)),
+                         max(1, round(art.height * scale))), Image.Resampling.LANCZOS)
+    centre_x, centre_y = solid_centre(art)
+    left = round(size / 2 - centre_x * scale)
+    top = round(size / 2 - centre_y * scale)
+    canvas.paste(scaled, (left, top), scaled)
     return canvas
 
 
@@ -74,10 +102,21 @@ def main():
     solid.alpha_composite(mark)
     solid.save(branding / 'logo.png')
     if args.debug:
-        sheet = Image.new('RGB', (3 * 220, 220), (255, 255, 255))
-        for index, background in enumerate(((255, 255, 255), (18, 18, 24), (0, 0, 0))):
+        sheet = Image.new('RGB', (5 * 220, 220), (255, 255, 255))
+        backgrounds = ((255, 255, 255), (18, 18, 24), (0, 0, 0),
+                       (32, 96, 220), (240, 196, 40))
+        for index, background in enumerate(backgrounds):
             tile = Image.new('RGBA', (220, 220), background + (255,))
-            tile.alpha_composite(square(art, 200, 0.94), (10, 10))
+            if index >= 3:
+                # Adaptive launcher masks: circle and squircle, same as One UI.
+                mask = Image.new('L', (220, 220), 0)
+                draw = ImageDraw.Draw(mask)
+                if index == 3:
+                    draw.ellipse((10, 10, 210, 210), fill=255)
+                else:
+                    draw.rounded_rectangle((10, 10, 210, 210), radius=58, fill=255)
+                tile.paste(Image.new('RGBA', (220, 220), (12, 12, 16, 255)), (0, 0), mask)
+            tile.alpha_composite(square(art, 220, 1 - LEGACY_PADDING * 2))
             sheet.paste(tile.convert('RGB'), (index * 220, 0))
         sheet.save(args.debug)
     print(f'logo {art.width}x{art.height} from {args.source.name}; mipmaps, adaptive foreground '

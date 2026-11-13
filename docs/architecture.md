@@ -27,8 +27,6 @@ The sole supported hook target is `com.samsung.android.biometrics.app.setting`.
 | `AssetPolicy` | Samsung asset-family matching |
 | `Icons` | PNG image-to-Lottie import support |
 | `UpdateChecker` | Stable GitHub release discovery and version comparison |
-| `UpdateInstaller` | Download, digest/signature verification and install |
-| `UpdateReceiver` | Result callback for the system installer fallback |
 | `Versions` | Semantic-version comparison for updates |
 
 ## Device compatibility
@@ -140,24 +138,17 @@ immediate retry, with cached release metadata used as an offline fallback. Pre-r
 and drafts are ignored by GitHub's endpoint. The installed `versionName` is compared
 with the release tag, and the result is cached in preferences.
 
-`UpdateInstaller` downloads the APK over HTTPS, verifies the published SHA-256 digest
-when present, checks the package name, checks that the version code is newer, and
-requires the downloaded APK to be signed by the same certificate as the installed
-app. Rooted devices install through `pm install -r`; otherwise the platform
-`PackageInstaller` flow asks for confirmation. Updating keeps the package and its
-settings because every official release uses the same signing key.
+The updater never fetches the APK itself. The prompt and notification open the GitHub
+release page, and the platform package installer handles the download and the install.
+The module therefore declares no install-packages permission and runs no installer
+command or session. Updating keeps the package and its settings because every official
+release uses the same signing key, and release builds are signed with APK Signature
+Scheme v2 and v3.
 
-If installation permission is missing, the foreground activity opens the app-specific
-unknown-sources settings. A persisted pending-update filename allows resumption after
-activity or process recreation. On return, permission is checked directly and the
-cached APK is verified again before installation, without redownloading it. The
-installer callback uses a mutable PendingIntent targeting the private UpdateReceiver
-so Android can supply status and confirmation extras. The receiver routes confirmation
-through the resumed MainActivity, or queues it until the user returns to the app.
-
-Versions 1.0.0 and 1.0.1 contain the previous updater. If their non-root installer
-callback is stuck, use the release-page download once to install 1.0.2; publishing
-a release cannot repair updater code already running on a phone.
+Versions up to 1.3.9 contained an in-app updater that downloaded the APK and installed
+it through `pm install` on rooted devices or a `PackageInstaller` session otherwise.
+Those builds are signed with the same key, so one install of this release replaces
+them without losing preferences.
 
 
 ## Catalog families and compatibility identifiers
