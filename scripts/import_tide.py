@@ -5,10 +5,15 @@ channel so the plate noise and the square haze disappear while the cyan glow kee
 its soft falloff, one shared crop and scale keep the ring from jittering, and the
 sequence ends on a generated transparent frame.
 
-The source is 18 seconds of a continuously evolving energy ring, far longer than an
-effect may stay on screen, so a single coherent stretch of the loop is used. 16
-consecutive frames of the 30fps source are shown four playback frames each, which
-lands the effect on 0.53 seconds at 120fps without speeding the waves up.
+The source is 18 seconds of a slowly evolving energy ring. Taking consecutive frames
+barely changes between them, which read as a still image on the sensor, so frames are
+sampled six source frames apart: 16 frames cover 3.2 seconds of the loop and play over
+four playback frames each, which lands the effect on 0.53 seconds at 120fps, about six
+times the source pace, and the waves visibly move.
+
+The ring has to sit on the sensor like Pulse instead of filling the artboard, so the
+shared crop is scaled to 170 of the 288 canvas rather than the 240 the full-bleed
+effects use.
 """
 import argparse
 import hashlib
@@ -24,6 +29,8 @@ from import_orbit import (CANVAS, CATALOG, FOOTPRINT, PREVIEWS, animation, decod
 DEFAULT_SOURCE = Path('/Users/aurelio/Downloads/915d00b7556e4079f5d14930d3ac720a_t3.mp4')
 FRAMES = 16
 START = 60
+STRIDE = 6
+TIDE_FOOTPRINT = 170
 PLATE_FLOOR = 24
 TAG = 'tide'
 
@@ -37,7 +44,7 @@ def normalize(frames):
             union = list(visible) if union is None else [min(union[0], visible[0]), min(union[1], visible[1]),
                                                          max(union[2], visible[2]), max(union[3], visible[3])]
     width, height = union[2] - union[0], union[3] - union[1]
-    scale = FOOTPRINT / max(width, height)
+    scale = TIDE_FOOTPRINT / max(width, height)
     size = (round(width * scale), round(height * scale))
     normalized = []
     for frame in frames:
@@ -55,7 +62,8 @@ def main():
     digest = hashlib.sha256(args.source.read_bytes()).hexdigest()
     with tempfile.TemporaryDirectory() as directory:
         decoded = decode(args.source, directory)
-        picked = normalize([keyed(frame, PLATE_FLOOR) for frame in decoded[START:START + FRAMES]])
+        sample = decoded[START:START + FRAMES * STRIDE:STRIDE]
+        picked = normalize([keyed(frame, PLATE_FLOOR) for frame in sample])
     picked.append(Image.new('RGBA', (CANVAS, CANVAS), (0, 0, 0, 0)))
     document = animation(picked, 'Tide')
     document['source_sha256'] = digest

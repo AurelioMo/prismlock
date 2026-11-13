@@ -23,7 +23,7 @@ Samsung devices and One UI builds, not only on one model or firmware version.
 Open the newest release, expand **Assets**, and download `PrismLock-*.apk`.
 The source ZIP/TAR files are not installable apps.
 
-Current version: **1.4.3**.
+Current version: **1.4.4**.
 
 ## Compatibility
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.4 - 2026-11-13
+
+- Fit Tide to the sensor like Pulse: the shared crop is scaled to 170 of the 288 canvas instead of the full-bleed 240, which brings its footprint to the same range as the other on-sensor effects.
+- Sample Tide every six source frames so 16 frames cover 3.2 seconds of the loop in 0.57 seconds. Consecutive frames barely differed and read as a still image; the waves now visibly move.
+
 ## 1.4.3 - 2026-11-13
 
 - Add the Tide touch effect: 16 frames of the supplied 600x600 loop keyed off the black plate, played at 120fps with interpolation over 0.57s and ending on a generated transparent frame.
