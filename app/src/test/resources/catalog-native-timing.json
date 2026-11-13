@@ -245,6 +245,14 @@
     "keqing_disappear": {
       "seconds": 0.4166666666666667,
       "frames": 25
+    },
+    "orbit": {
+      "seconds": 0.4666666666666667,
+      "frames": 14
+    },
+    "pulse": {
+      "seconds": 0.43333333333333335,
+      "frames": 26
     }
   }
 }

@@ -402,6 +402,29 @@
         "aod"
       ],
       "style_label": "White Anemo"
+    },
+    {
+      "tag": "orb",
+      "file": "icons_orb.json",
+      "frames": 1,
+      "external_source": "gemini-2.5-flash-image_quero_esse_negocio_que_enviei_em_imagem_monocromatico_roxo_e_azul-0.jpg",
+      "source_sha256": "ef7784e699e236d774a6230b47f2db8966343995b378687269385fde72b7a76e"
+    },
+    {
+      "tag": "lotus",
+      "file": "icons_lotus.json",
+      "frames": 1,
+      "external_source": "1db90d7527d3ef65e09bc196126c5f55.jpg",
+      "source_sha256": "525935eefb428b6e9a346fea967ceede5385080b9f60b7938dfc3bee0741ebcd",
+      "style_label": "Crystal Lotus"
+    },
+    {
+      "tag": "snowflake",
+      "file": "icons_snowflake.json",
+      "frames": 1,
+      "external_source": "6d3e6dae6d49afdd2f210bef81f24b3f.jpg",
+      "source_sha256": "014a75f4059c669166064199b51b0dd0888bd489b9c959d8431d87f687d9f1aa",
+      "style_label": "Crystal Snowflake"
     }
   ],
   "animations": [
@@ -1266,6 +1289,22 @@
       ],
       "source_sha256": "4f8eca81b5adf339bb9cde8fe6e02a80c9ea12121b8c05a02b2e6212a1ade30b",
       "style_label": "Hydro"
+    },
+    {
+      "tag": "orbit",
+      "file": "animations_orbit.json",
+      "frames": 14,
+      "terminal_frame": "generated-transparent",
+      "external_source": "ezgif-6db9cb6dad50adda.mp4",
+      "source_sha256": "417767d793605bbc88000fb2b5369ae9c1e48fd05ade0b0635806a6ace7de3db"
+    },
+    {
+      "tag": "pulse",
+      "file": "animations_pulse.json",
+      "frames": 26,
+      "terminal_frame": "generated-transparent",
+      "external_source": "d7ac8fe75a93307683db992d9c8c6f8c.gif",
+      "source_sha256": "9afa073b8c1470ef68534f25fbe5a805e3a8467a1b0f6bdd98a91627ed64f749"
     }
   ],
   "aliases": {
