@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.3 - 2026-11-13
+
+- Add the Tide touch effect: 16 frames of the supplied 600x600 loop keyed off the black plate, played at 120fps with interpolation over 0.57s and ending on a generated transparent frame.
+
 ## 1.4.2 - 2026-11-13
 
 - Restore the 1.2.0 update system unchanged: the module downloads the release APK, verifies digest, package and signing certificate, installs silently through the root path when the device is rooted and hands the file to Android's system installer otherwise, with the permission resume and the install-status callback back in place.

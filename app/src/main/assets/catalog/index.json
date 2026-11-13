@@ -1305,6 +1305,14 @@
       "terminal_frame": "generated-transparent",
       "external_source": "d7ac8fe75a93307683db992d9c8c6f8c.gif",
       "source_sha256": "9afa073b8c1470ef68534f25fbe5a805e3a8467a1b0f6bdd98a91627ed64f749"
+    },
+    {
+      "tag": "tide",
+      "file": "animations_tide.json",
+      "frames": 17,
+      "terminal_frame": "generated-transparent",
+      "external_source": "915d00b7556e4079f5d14930d3ac720a_t3.mp4",
+      "source_sha256": "913ee2b2f0e97a4d9d3c2833e299f1bb9d70e627dd77c1045ca5f96943bfa74a"
     }
   ],
   "aliases": {
