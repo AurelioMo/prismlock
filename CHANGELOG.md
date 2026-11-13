@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.5 - 2026-11-13
+
+- Make Tide an aura around the sensor instead of a ring floating above it. The runtime maps an effect's catalogBounds to a fixed footprint, and Tide's crop filled its own bounds, so a tight ring was drawn at full size. The ring is now drawn at 150 of the 288 canvas inside its own blurred, dimmed halo, which puts the bounds at 284 like Pulse and leaves the visible ring close to the fingerprint.
+
 ## 1.4.4 - 2026-11-13
 
 - Fit Tide to the sensor like Pulse: the shared crop is scaled to 170 of the 288 canvas instead of the full-bleed 240, which brings its footprint to the same range as the other on-sensor effects.

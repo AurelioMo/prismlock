@@ -21,36 +21,46 @@ import json
 import tempfile
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageFilter
 
-from import_orbit import (CANVAS, CATALOG, FOOTPRINT, PREVIEWS, animation, decode, keyed,
-                          png, preview)
+from import_orbit import (CANVAS, CATALOG, PREVIEWS, animation, decode, keyed, png, preview)
 
 DEFAULT_SOURCE = Path('/Users/aurelio/Downloads/915d00b7556e4079f5d14930d3ac720a_t3.mp4')
 FRAMES = 16
 START = 60
 STRIDE = 6
-TIDE_FOOTPRINT = 170
+RING = 150
+HALO = 284
+HALO_ALPHA = 0.42
+HALO_BLUR = 16
 PLATE_FLOOR = 24
 TAG = 'tide'
 
 
 def normalize(frames):
-    """One shared crop and scale for every frame, as the other effects use."""
+    """Ring plus its own halo, so the effect reads as an aura around the sensor.
+
+    The runtime maps catalogBounds to a fixed footprint, so a tight crop makes the
+    visible ring fill that footprint and float away from the fingerprint. Like Pulse,
+    the ring is drawn small inside a blurred, dimmed copy that reaches the canvas
+    edges: the halo defines the bounds while the ring stays near the sensor.
+    """
     union = None
     for frame in frames:
         visible = frame.getchannel('A').point(lambda alpha: 255 if alpha >= 16 else 0).getbbox()
         if visible:
             union = list(visible) if union is None else [min(union[0], visible[0]), min(union[1], visible[1]),
                                                          max(union[2], visible[2]), max(union[3], visible[3])]
-    width, height = union[2] - union[0], union[3] - union[1]
-    scale = TIDE_FOOTPRINT / max(width, height)
-    size = (round(width * scale), round(height * scale))
     normalized = []
     for frame in frames:
-        image = frame.crop(union).resize(size, Image.Resampling.LANCZOS)
+        cropped = frame.crop(union)
+        ring = cropped.resize((RING, RING), Image.Resampling.LANCZOS)
+        halo = cropped.resize((HALO, HALO), Image.Resampling.LANCZOS).filter(
+            ImageFilter.GaussianBlur(HALO_BLUR))
+        halo.putalpha(halo.getchannel('A').point(lambda alpha: round(alpha * HALO_ALPHA)))
         canvas = Image.new('RGBA', (CANVAS, CANVAS), (0, 0, 0, 0))
-        canvas.paste(image, ((CANVAS - size[0]) // 2, (CANVAS - size[1]) // 2))
+        canvas.alpha_composite(halo, ((CANVAS - HALO) // 2, (CANVAS - HALO) // 2))
+        canvas.alpha_composite(ring, ((CANVAS - RING) // 2, (CANVAS - RING) // 2))
         normalized.append(canvas)
     return normalized
 
