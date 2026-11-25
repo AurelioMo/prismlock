@@ -29,6 +29,11 @@ public class MainActivity extends Activity {
         super.onPause();
     }
 
+    @Override protected void onDestroy() {
+        updates.onDestroy();
+        super.onDestroy();
+    }
+
     static boolean deliverInstallConfirmation(Intent confirmation) {
         return UpdateUi.deliverInstallConfirmation(confirmation);
     }

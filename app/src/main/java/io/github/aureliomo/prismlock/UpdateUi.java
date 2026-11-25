@@ -24,6 +24,9 @@ final class UpdateUi {
 
     private final MainActivity activity;
     private TextView updateDetail;
+    private AlertDialog progressDialog;
+    private ProgressBar progressBar;
+    private TextView progressStatus;
     private UpdateChecker.Release pendingRelease;
     private UpdateChecker.Release notificationRelease;
     private String offeredVersion = "";
@@ -78,23 +81,29 @@ final class UpdateUi {
 
     void check(boolean manual) {
         if (manual) setUpdateStatus(activity.getString(R.string.update_checking));
+        WeakReference<UpdateUi> reference = new WeakReference<>(this);
         UpdateChecker.check(activity, (release, error) -> {
-            if (activity.isFinishing() || activity.isDestroyed()) return;
-            if (error != null) {
-                setUpdateStatus(manual ? activity.getString(R.string.update_check_failed) : activity.getString(R.string.update_check_action));
-                if (manual) showUpdateError(error);
-                return;
-            }
-            if (release == null) {
-                setUpdateStatus(activity.getString(R.string.update_up_to_date));
-                if (manual) activity.toast(activity.getString(R.string.update_up_to_date_toast));
-                return;
-            }
-            setUpdateStatus("v" + release.version);
-            if (manual) showUpdateDialog(release);
-            else if (foreground.get() == activity) offerUpdate(release);
-            else pendingRelease = release;
+            UpdateUi ui = reference.get();
+            if (ui != null) ui.onCheckFinished(manual, release, error);
         });
+    }
+
+    private void onCheckFinished(boolean manual, UpdateChecker.Release release, String error) {
+        if (activity.isFinishing() || activity.isDestroyed()) return;
+        if (error != null) {
+            setUpdateStatus(manual ? activity.getString(R.string.update_check_failed) : activity.getString(R.string.update_check_action));
+            if (manual) showUpdateError(error);
+            return;
+        }
+        if (release == null) {
+            setUpdateStatus(activity.getString(R.string.update_up_to_date));
+            if (manual) activity.toast(activity.getString(R.string.update_up_to_date_toast));
+            return;
+        }
+        setUpdateStatus("v" + release.version);
+        if (manual) showUpdateDialog(release);
+        else if (foreground.get() == activity) offerUpdate(release);
+        else pendingRelease = release;
     }
 
     private void offerUpdate(UpdateChecker.Release release) {
@@ -165,6 +174,7 @@ final class UpdateUi {
     }
 
     private void startUpdate(UpdateChecker.Release release) {
+        if (progressDialog != null) return;
         LinearLayout body = activity.catalogScreen.column();
         body.setPadding(activity.dp(24), activity.dp(16), activity.dp(24), activity.dp(8));
         TextView status = activity.catalogScreen.text(release == null ? activity.getString(R.string.update_opening_installer)
@@ -182,46 +192,79 @@ final class UpdateUi {
                 .setView(body)
                 .setCancelable(false)
                 .create();
+        progressDialog = dialog;
+        progressBar = bar;
+        progressStatus = status;
         dialog.show();
-        UpdateInstaller.Callback callback = new UpdateInstaller.Callback() {
-            @Override public void onProgress(int percent) {
-                if (activity.isFinishing() || activity.isDestroyed()) return;
-                bar.setProgress(percent);
-                status.setText("Downloading update\u2026 " + percent + "%");
-            }
-
-            @Override public void onStatus(String message) {
-                if (activity.isFinishing() || activity.isDestroyed()) return;
-                bar.setIndeterminate(true);
-                status.setText(message);
-            }
-
-            @Override public void onFinished(UpdateInstaller.Result result) {
-                if (activity.isFinishing() || activity.isDestroyed()) return;
-                dialog.dismiss();
-                if (result.needsPermission) {
-                    UpdateInstaller.waitingForPermission(activity, true);
-                    try {
-                        activity.startActivityForResult(UpdateInstaller.unknownSourcesIntent(activity),
-                                REQ_INSTALL_PERMISSION);
-                    } catch (Exception exception) {
-                        UpdateInstaller.waitingForPermission(activity, false);
-                        activity.toast(activity.getString(R.string.update_permission_help));
-                    }
-                } else if (result.success) {
-                    activity.toast(result.message);
-                } else {
-                    new AlertDialog.Builder(activity)
-                            .setTitle(activity.getString(R.string.update_install_error))
-                            .setMessage(result.message)
-                            .setNegativeButton(activity.getString(R.string.action_close), null)
-                            .setPositiveButton(activity.getString(R.string.update_open_github), (dialog, which) -> openReleases())
-                            .show();
-                }
-            }
-        };
+        UpdateInstaller.Callback callback = new ProgressCallback(this);
         if (release == null) UpdateInstaller.resumeInstall(activity, callback);
         else UpdateInstaller.downloadAndInstall(activity, release, callback);
+    }
+
+    void onDestroy() {
+        dismissProgress();
+    }
+
+    private void dismissProgress() {
+        if (progressDialog != null) progressDialog.dismiss();
+        progressDialog = null;
+        progressBar = null;
+        progressStatus = null;
+    }
+
+    private void finishUpdate(UpdateInstaller.Result result) {
+        dismissProgress();
+        if (result.needsPermission) {
+            UpdateInstaller.waitingForPermission(activity, true);
+            try {
+                activity.startActivityForResult(UpdateInstaller.unknownSourcesIntent(activity), REQ_INSTALL_PERMISSION);
+            } catch (Exception exception) {
+                UpdateInstaller.waitingForPermission(activity, false);
+                activity.toast(activity.getString(R.string.update_permission_help));
+            }
+        } else if (result.success) {
+            activity.toast(result.message);
+        } else {
+            new AlertDialog.Builder(activity)
+                    .setTitle(R.string.update_install_error)
+                    .setMessage(result.message)
+                    .setNegativeButton(R.string.action_close, null)
+                    .setPositiveButton(R.string.update_open_github, (dialog, which) -> openReleases())
+                    .show();
+        }
+    }
+
+    private static final class ProgressCallback implements UpdateInstaller.Callback {
+        private final WeakReference<UpdateUi> reference;
+
+        ProgressCallback(UpdateUi ui) {
+            reference = new WeakReference<>(ui);
+        }
+
+        private UpdateUi current() {
+            UpdateUi ui = reference.get();
+            if (ui == null || ui.progressDialog == null || ui.activity.isFinishing() || ui.activity.isDestroyed()) return null;
+            return ui;
+        }
+
+        @Override public void onProgress(int percent) {
+            UpdateUi ui = current();
+            if (ui == null) return;
+            ui.progressBar.setProgress(percent);
+            ui.progressStatus.setText(ui.activity.getString(R.string.update_download_progress, percent));
+        }
+
+        @Override public void onStatus(String message) {
+            UpdateUi ui = current();
+            if (ui == null) return;
+            ui.progressBar.setIndeterminate(true);
+            ui.progressStatus.setText(message);
+        }
+
+        @Override public void onFinished(UpdateInstaller.Result result) {
+            UpdateUi ui = current();
+            if (ui != null) ui.finishUpdate(result);
+        }
     }
 
     private void openReleases() {
