@@ -12,6 +12,7 @@ import android.os.Process;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Map;
 
 /** Read-only configuration and image access for the separate biometrics process. */
 public class ConfigProvider extends ContentProvider {
@@ -41,16 +42,24 @@ public class ConfigProvider extends ContentProvider {
     public Cursor query(Uri uri, String[] p, String s, String[] a, String o) {
         enforceReader();
         if (!"/cfg".equals(uri.getPath())) throw new IllegalArgumentException("Unknown path");
-        SharedPreferences sp = prefs();
-        MatrixCursor c = new MatrixCursor(new String[]{"size", "stroke10", "dark_kind", "light_kind", "ver", "enabled", "icon", "animation"});
-        c.addRow(new Object[]{
-                sp.getInt("size", Icons.DEF_SIZE),
-                sp.getInt("stroke10", Icons.DEF_STROKE10),
-                sp.getString("dark_kind", ""),
-                sp.getString("light_kind", ""),
-                sp.getLong("ver", 0L), sp.getBoolean("enabled", true) ? 1 : 0,
-                sp.getString("icon", ""), sp.getString("animation", "")});
-        return c;
+        Map<String, ?> snapshot = prefs().getAll();
+        MatrixCursor cursor = new MatrixCursor(new String[]{
+                "size", "stroke10", "dark_kind", "light_kind", "ver", "enabled", "icon", "animation"});
+        cursor.addRow(new Object[]{
+                value(snapshot, "size", Icons.DEF_SIZE),
+                value(snapshot, "stroke10", Icons.DEF_STROKE10),
+                value(snapshot, "dark_kind", ""),
+                value(snapshot, "light_kind", ""),
+                value(snapshot, "ver", 0L),
+                Boolean.TRUE.equals(value(snapshot, "enabled", true)) ? 1 : 0,
+                value(snapshot, "icon", ""),
+                value(snapshot, "animation", "")});
+        return cursor;
+    }
+
+    private static Object value(Map<String, ?> snapshot, String key, Object fallback) {
+        Object value = snapshot.get(key);
+        return fallback.getClass().isInstance(value) ? value : fallback;
     }
 
     @Override
