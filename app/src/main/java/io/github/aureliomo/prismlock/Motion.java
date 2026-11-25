@@ -13,6 +13,7 @@ final class Motion {
         double start = composition.getDouble("ip");
         double end = composition.getDouble("op");
         double step = composition.optDouble("catalogFrameStep", 1);
+        if (!Double.isFinite(start) || !Double.isFinite(end) || !Double.isFinite(step) || step <= 0) return;
         double half = step / 2;
         // Only the built-in sequential image timeline is eligible. Imports are untouched.
         for (int i = 0; i < layers.length(); i++) {

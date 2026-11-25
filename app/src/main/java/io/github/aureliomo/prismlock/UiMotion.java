@@ -1,5 +1,6 @@
 package io.github.aureliomo.prismlock;
 
+import android.animation.ValueAnimator;
 import android.view.View;
 import android.view.animation.PathInterpolator;
 
@@ -26,6 +27,12 @@ final class UiMotion {
 
     static void settle(View view) {
         view.animate().cancel();
+        if (!ValueAnimator.areAnimatorsEnabled()) {
+            view.setAlpha(1);
+            view.setScaleX(1);
+            view.setScaleY(1);
+            return;
+        }
         view.setAlpha(0.75f);
         view.setScaleX(0.96f);
         view.setScaleY(0.96f);
