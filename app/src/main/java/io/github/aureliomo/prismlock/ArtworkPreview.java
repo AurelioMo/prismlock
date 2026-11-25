@@ -12,17 +12,10 @@ import org.json.JSONObject;
 import java.io.File;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 final class ArtworkPreview extends View {
-    private static final ThreadPoolExecutor LOADER = new ThreadPoolExecutor(1, 1,
-            30, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), task -> {
-                Thread thread = new Thread(task, "prismlock-preview");
-                thread.setDaemon(true);
-                return thread;
-            });
-    static { LOADER.allowCoreThreadTimeOut(true); }
+    private static final ThreadPoolExecutor LOADER = AppWorkers.serial("prismlock-preview");
+    private static final android.os.Handler MAIN = new android.os.Handler(android.os.Looper.getMainLooper());
     private Future<?> loading;
     private volatile long generation;
     private long started;
@@ -123,7 +116,7 @@ final class ArtworkPreview extends View {
                     }
                 }
                 PreviewImages ready = next;
-                post(() -> {
+                MAIN.post(() -> {
                     if (request != generation || !identity.equals(requested) || !isAttachedToWindow()) {
                         recycleUnpublished(ready.frames);
                         return;
@@ -158,8 +151,11 @@ final class ArtworkPreview extends View {
     }
 
     private void cancelLoading() {
-        if (loading != null) loading.cancel(true);
-        LOADER.purge();
+        if (loading != null) {
+            loading.cancel(true);
+            loading = null;
+            LOADER.purge();
+        }
     }
 
     @Override protected void onWindowVisibilityChanged(int visibility) {
