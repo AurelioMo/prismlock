@@ -52,6 +52,11 @@ final class Catalog {
             String name = tag.substring("coloros17_".length()).replace('_', ' ');
             return "ColorOS 17 · " + name.substring(0, 1).toUpperCase(Locale.ROOT) + name.substring(1);
         }
+        if ("hyperos_a".equals(tag)) return "HyperOS";
+        if (tag.startsWith("hyperos_") && tag.length() > "hyperos_".length()) {
+            String name = tag.substring("hyperos_".length()).replace('_', ' ');
+            return "HyperOS · " + name.substring(0, 1).toUpperCase(Locale.ROOT) + name.substring(1);
+        }
         switch (tag) {
             case "aqua": return "Aqua";
             case "buble": return "ColorOS 17 · Bubble";
