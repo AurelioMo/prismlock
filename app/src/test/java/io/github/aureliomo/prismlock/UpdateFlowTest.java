@@ -31,7 +31,7 @@ public class UpdateFlowTest {
                 .putLong("update_last_attempt", System.currentTimeMillis()).commit();
         manager = (ShadowApplicationPackageManager) Shadows.shadowOf(app.getPackageManager());
         manager.setCanRequestPackageInstalls(false);
-        Field pending = MainActivity.class.getDeclaredField("pendingConfirmation");
+        Field pending = UpdateUi.class.getDeclaredField("pendingConfirmation");
         pending.setAccessible(true);
         pending.set(null, null);
     }
@@ -69,7 +69,7 @@ public class UpdateFlowTest {
         // Dispatch the recorded broadcast explicitly: Robolectric records explicit
         // PendingIntent broadcasts without consistently instantiating manifest receivers.
         new UpdateReceiver().onReceive(app, broadcast);
-        Field saved = MainActivity.class.getDeclaredField("pendingConfirmation");
+        Field saved = UpdateUi.class.getDeclaredField("pendingConfirmation");
         saved.setAccessible(true);
         Intent delivered = (Intent) saved.get(null);
         assertNotNull("System confirmation extras must survive PendingIntent delivery", delivered);

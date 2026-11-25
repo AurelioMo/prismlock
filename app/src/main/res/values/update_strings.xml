@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="update_checking">Checking…</string>
+    <string name="update_check_failed">Check failed</string>
+    <string name="update_check_action">Tap to check</string>
+    <string name="update_up_to_date">Up to date</string>
+    <string name="update_up_to_date_toast">PrismLock is up to date.</string>
+    <string name="update_available">Update available</string>
+    <string name="update_release_page">Release page</string>
+    <string name="update_later">Later</string>
+    <string name="update_install">Update</string>
+    <string name="update_check_error">Could not check for updates</string>
+    <string name="update_open_github">Open GitHub</string>
+    <string name="update_in_progress">Updating PrismLock</string>
+    <string name="update_install_error">Update did not finish</string>
+    <string name="update_installer_open_error">Could not open installer</string>
+    <string name="update_browser_error">Could not open the browser.</string>
+    <string name="update_permission_help">Open Settings and allow PrismLock to install unknown apps, then retry Update.</string>
+    <string name="update_permission_denied">Installation permission was not granted. Tap Update to try again.</string>
+    <string name="update_opening_installer">Opening the system installer…</string>
+    <string name="action_close">Close</string>
+    <string name="settings_updates">Updates</string>
+</resources>
