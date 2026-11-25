@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.8 - 2026-11-25
+
+- Add the HyperOS fingerprint touch effect with six styles ([PR #5](https://github.com/AurelioMo/prismlock/pull/5) by console-ramoops).
+- Stabilize the startup update tests with longer async deadlines and synchronized callback queue checks.
+
 ## 1.4.7 - 2026-11-13
 
 - Make Dew wrap the fingerprint: the ring is drawn at 210 of the 288 canvas instead of 150, inside the same halo, so the drop surrounds the icon rather than sitting outside it.
