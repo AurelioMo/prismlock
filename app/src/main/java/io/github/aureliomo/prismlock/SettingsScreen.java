@@ -33,7 +33,7 @@ final class SettingsScreen {
         LinearLayout fingerprint = screen.group(settings, activity.getString(R.string.settings_fingerprint));
         screen.settingToggle(fingerprint, activity.getString(R.string.settings_customization), activity.getString(R.string.settings_customize_description),
                 activity.preferences().getBoolean("enabled", true), (button, checked) ->
-                        activity.preferences().edit().putBoolean("enabled", checked).putLong("ver", SettingsStore.nextVersion(activity.preferences())).apply());
+                        SettingsStore.applyArtworkChange(activity.preferences(), editor -> editor.putBoolean("enabled", checked)));
         screen.settingValue(fingerprint, activity.getString(R.string.settings_fingerprint_size), (activity.fingerprintSize() * 2) + "%", () -> {
             LinearLayout controls = screen.column();
             controls.setPadding(activity.dp(24), activity.dp(16), activity.dp(24), activity.dp(8));
@@ -55,7 +55,7 @@ final class SettingsScreen {
             new AlertDialog.Builder(activity).setTitle(activity.getString(R.string.settings_fingerprint_size)).setView(controls)
                     .setNegativeButton(activity.getString(R.string.action_cancel), null).setPositiveButton(activity.getString(R.string.action_done), (dialog, which) -> {
                         int newSize = MIN_SIZE + slider.getProgress();
-                        activity.preferences().edit().putInt("size", newSize).putLong("ver", SettingsStore.nextVersion(activity.preferences())).apply();
+                        SettingsStore.applyArtworkChange(activity.preferences(), editor -> editor.putInt("size", newSize));
                         activity.recreate();
                     }).show();
         });
@@ -65,16 +65,13 @@ final class SettingsScreen {
                         .setItems(new String[]{activity.getString(R.string.settings_import_dark), activity.getString(R.string.settings_import_light), activity.getString(R.string.settings_remove_icons)}, (dialog, which) -> {
                             if (which == 0) activity.pick(MainActivity.REQ_DARK);
                             else if (which == 1) activity.pick(MainActivity.REQ_LIGHT);
-                            else { activity.clearSlot("dark"); activity.clearSlot("light"); }
+                            else activity.clearArtwork(false);
                         }).setNegativeButton(activity.getString(R.string.action_close), null).show());
         screen.settingAction(data, activity.getString(R.string.settings_reset), null, () ->
                 new AlertDialog.Builder(activity).setTitle(activity.getString(R.string.settings_reset_title))
                         .setMessage(activity.getString(R.string.settings_reset_description))
                         .setNegativeButton(activity.getString(R.string.action_cancel), null).setPositiveButton(activity.getString(R.string.action_reset), (dialog, which) -> {
-                            activity.clearSlot("dark"); activity.clearSlot("light");
-                            activity.preferences().edit().putInt("size", Icons.DEF_SIZE).putString("icon", "")
-                                    .putString("animation", "").putLong("ver", SettingsStore.nextVersion(activity.preferences())).apply();
-                            activity.recreate();
+                            activity.clearArtwork(true);
                         }).show());
         LinearLayout other = screen.group(settings, activity.getString(R.string.settings_app));
         screen.settingAction(other, activity.getString(R.string.settings_preview), activity.getString(R.string.settings_preview_description), activity::showPreview);

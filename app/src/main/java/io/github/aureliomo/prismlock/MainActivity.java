@@ -11,8 +11,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
-
 public class MainActivity extends Activity {
     static final String PREFS = "cfg";
     static final int REQ_DARK = 1, REQ_LIGHT = 2;
@@ -109,15 +107,13 @@ public class MainActivity extends Activity {
         });
     }
 
-    private void clearFiles(String slot) {
-        new File(getFilesDir(), "custom_" + slot + ".png").delete();
-        new File(getFilesDir(), "custom_" + slot + ".json").delete();
-    }
-
-    void clearSlot(String slot) {
-        clearFiles(slot);
-        preferences().edit().putString(slot + "_kind", "").putLong("ver", SettingsStore.nextVersion(preferences())).apply();
-        refresh();
+    void clearArtwork(boolean resetSelection) {
+        ArtworkImports.clear(this, resetSelection, error -> {
+            if (isFinishing() || isDestroyed()) return;
+            if (error != null) toast(error);
+            else if (resetSelection) recreate();
+            else refresh();
+        });
     }
 
     void toast(String message) {

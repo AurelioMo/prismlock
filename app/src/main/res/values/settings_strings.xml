@@ -28,4 +28,5 @@
     <string name="settings_developer">Developer</string>
     <string name="settings_repository">Repository</string>
     <string name="settings_about_credit">Original catalog by custombeta. Samsung integration researched with RingPrint.\n\nPrismLock is an independent community project.</string>
+    <string name="settings_clear_error">Could not save the artwork settings.</string>
 </resources>
