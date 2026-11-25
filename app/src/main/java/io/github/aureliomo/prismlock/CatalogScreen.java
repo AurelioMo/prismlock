@@ -21,6 +21,9 @@ import android.widget.TextView;
 import android.widget.ListView;
 
 final class CatalogScreen {
+    private static final int[] TAB_LABELS = {R.string.catalog_fingerprints, R.string.catalog_animations, R.string.catalog_settings};
+    private static final String[] TAB_ICONS = {"fingerprint", "animation", "settings"};
+
     private final Activity activity;
     private final CatalogCollection collection;
     private final Typeface regular;
@@ -40,7 +43,7 @@ final class CatalogScreen {
     private final LinearLayout[] tabs = new LinearLayout[3];
     private LinearLayout settings;
     private int selectedTab;
-    private final int[] scrollPositions = new int[3];
+    private int settingsScrollPosition;
 
     CatalogScreen(Activity activity, Runnable importFile, Runnable selectionChanged, int initialTab) {
         this.activity = activity;
@@ -96,10 +99,10 @@ final class CatalogScreen {
         LinearLayout toolbar = new LinearLayout(activity);
         toolbar.setGravity(Gravity.CENTER_VERTICAL);
         toolbar.setPadding(dp(16), 0, dp(16), 0);
-        importAction = action("add", "Import fingerprint", importFile);
+        importAction = action("add", activity.getString(R.string.catalog_import), importFile);
         toolbar.addView(importAction, new LinearLayout.LayoutParams(dp(48), dp(48)));
         toolbar.addView(new View(activity), new LinearLayout.LayoutParams(0, 1, 1));
-        ImageView applyAction = action("refresh", "Reload collection", activity::recreate);
+        ImageView applyAction = action("refresh", activity.getString(R.string.catalog_reload), activity::recreate);
         toolbar.addView(applyAction, new LinearLayout.LayoutParams(dp(48), dp(48)));
         shell.addView(toolbar, new LinearLayout.LayoutParams(-1, dp(48)));
 
@@ -131,24 +134,26 @@ final class CatalogScreen {
         LinearLayout navigation = new LinearLayout(activity);
         navigation.setPadding(dp(12), dp(5), dp(12), dp(4));
         navigation.setBackground(round(dark ? 0xE6101920 : 0xE6F3F8FC, 26));
-        String[] names = {"Fingerprints", "Animations", "Settings"};
-        String[] symbols = {"fingerprint", "animation", "settings"};
         for (int index = 0; index < tabs.length; index++) {
             final int destination = index;
             LinearLayout tab = column();
             tab.setGravity(Gravity.CENTER);
-            tab.setContentDescription(names[index]);
+            String labelText = activity.getString(TAB_LABELS[index]);
+            tab.setContentDescription(labelText);
+            tab.setFocusable(true);
             tab.setBackground(ripple(Color.TRANSPARENT, 20));
             ImageView icon = new ImageView(activity);
-            icon.setImageDrawable(symbol(symbols[index], muted));
+            icon.setImageDrawable(symbol(TAB_ICONS[index], muted));
+            icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             tab.addView(icon, new LinearLayout.LayoutParams(dp(25), dp(25)));
-            TextView label = text(names[index], 11, 600, muted);
+            TextView label = text(labelText, 11, 600, muted);
             label.setGravity(Gravity.CENTER);
+            label.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             label.setPadding(0, dp(4), 0, 0);
             tab.addView(label);
             tab.setOnClickListener(view -> {
                 if (selectedTab == destination) return;
-                if (selectedTab == 2) scrollPositions[selectedTab] = scroll.getScrollY();
+                if (selectedTab == 2) settingsScrollPosition = scroll.getScrollY();
                 selectedTab = destination;
                 render();
             });
@@ -206,7 +211,7 @@ final class CatalogScreen {
         return group;
     }
 
-    void settingAction(LinearLayout parent, String name, String subtitle, Runnable action) {
+    void settingAction(LinearLayout parent, int name, String subtitle, Runnable action) {
         LinearLayout row = new LinearLayout(activity);
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setMinimumHeight(dp(62));
@@ -214,7 +219,7 @@ final class CatalogScreen {
         row.setBackground(ripple(Color.TRANSPARENT, 12));
         addSettingIcon(row, name);
         LinearLayout labels = column();
-        labels.addView(text(name, 16, 600, foreground));
+        labels.addView(text(activity.getString(name), 16, 600, foreground));
         if (subtitle != null) {
             TextView description = text(subtitle, 13, 400, muted);
             description.setPadding(0, dp(5), dp(12), 0);
@@ -228,14 +233,14 @@ final class CatalogScreen {
         parent.addView(row);
     }
 
-    TextView settingValue(LinearLayout parent, String name, String value, Runnable action) {
+    TextView settingValue(LinearLayout parent, int name, String value, Runnable action) {
         LinearLayout row = new LinearLayout(activity);
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setMinimumHeight(dp(62));
         row.setPadding(0, dp(14), 0, dp(14));
         row.setBackground(ripple(Color.TRANSPARENT, 12));
         addSettingIcon(row, name);
-        row.addView(text(name, 16, 600, foreground), new LinearLayout.LayoutParams(0, -2, 1));
+        row.addView(text(activity.getString(name), 16, 600, foreground), new LinearLayout.LayoutParams(0, -2, 1));
         TextView detail = text(value, 14, 400, muted);
         detail.setPadding(dp(8), 0, dp(8), 0);
         row.addView(detail);
@@ -247,17 +252,13 @@ final class CatalogScreen {
         return detail;
     }
 
-    private void addSettingIcon(LinearLayout row, String name) {
-        String glyph;
-        switch (name) {
-            case "Theme": glyph = "theme"; break;
-            case "Fingerprint size": glyph = "size"; break;
-            case "Custom icons": glyph = "import"; break;
-            case "Reset customization": glyph = "refresh"; break;
-            case "Preview": glyph = "animation"; break;
-            case "Updates": glyph = "refresh"; break;
-            default: glyph = "info"; break;
-        }
+    private void addSettingIcon(LinearLayout row, int name) {
+        String glyph = "info";
+        if (name == R.string.settings_theme) glyph = "theme";
+        else if (name == R.string.settings_fingerprint_size) glyph = "size";
+        else if (name == R.string.settings_custom_icons) glyph = "import";
+        else if (name == R.string.settings_reset || name == R.string.settings_updates) glyph = "refresh";
+        else if (name == R.string.settings_preview) glyph = "animation";
         ImageView icon = new ImageView(activity);
         icon.setImageDrawable(symbol(glyph, foreground));
         LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(dp(22), dp(22));
@@ -291,13 +292,13 @@ final class CatalogScreen {
 
     private void render() {
         content.removeAllViews();
-        title.setText(new String[]{"Fingerprints", "Animations", "Settings"}[selectedTab]);
+        title.setText(TAB_LABELS[selectedTab]);
         importAction.setVisibility(selectedTab == 0 ? View.VISIBLE : View.INVISIBLE);
         for (int index = 0; index < tabs.length; index++) {
             boolean selected = index == selectedTab;
             tabs[index].setSelected(selected);
             ((ImageView) tabs[index].getChildAt(0)).setImageDrawable(
-                    symbol(new String[]{"fingerprint", "animation", "settings"}[index], selected ? foreground : muted));
+                    symbol(TAB_ICONS[index], selected ? foreground : muted));
             ((TextView) tabs[index].getChildAt(1)).setTextColor(selected ? foreground : muted);
             tabs[index].setAlpha(selected ? 1 : 0.7f);
         }
@@ -308,7 +309,7 @@ final class CatalogScreen {
         if (selectedTab == 2) {
             if (settings.getParent() instanceof ViewGroup) ((ViewGroup) settings.getParent()).removeView(settings);
             content.addView(settings);
-            scroll.post(() -> scroll.scrollTo(0, scrollPositions[2]));
+            scroll.post(() -> scroll.scrollTo(0, settingsScrollPosition));
         } else if (collections[selectedTab] == null) {
             collections[selectedTab] = collection.create(selectedTab, scroll.getOutlineProvider());
             pages.addView(collections[selectedTab], new FrameLayout.LayoutParams(-1, -1));

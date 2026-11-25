@@ -20,7 +20,7 @@ final class SettingsScreen {
         LinearLayout settings = screen.column();
         LinearLayout appearance = screen.group(settings, activity.getString(R.string.settings_appearance));
         String theme = activity.preferences().getString("theme", "system");
-        screen.settingValue(appearance, activity.getString(R.string.settings_theme), "light".equals(theme) ? activity.getString(R.string.settings_light) : "dark".equals(theme) ? activity.getString(R.string.settings_dark) : activity.getString(R.string.settings_system), () -> {
+        screen.settingValue(appearance, R.string.settings_theme, "light".equals(theme) ? activity.getString(R.string.settings_light) : "dark".equals(theme) ? activity.getString(R.string.settings_dark) : activity.getString(R.string.settings_system), () -> {
             String[] values = {"system", "light", "dark"};
             int selected = "light".equals(theme) ? 1 : "dark".equals(theme) ? 2 : 0;
             new AlertDialog.Builder(activity).setTitle(activity.getString(R.string.settings_theme))
@@ -34,12 +34,13 @@ final class SettingsScreen {
         screen.settingToggle(fingerprint, activity.getString(R.string.settings_customization), activity.getString(R.string.settings_customize_description),
                 activity.preferences().getBoolean("enabled", true), (button, checked) ->
                         SettingsStore.applyArtworkChange(activity.preferences(), editor -> editor.putBoolean("enabled", checked)));
-        screen.settingValue(fingerprint, activity.getString(R.string.settings_fingerprint_size), (activity.fingerprintSize() * 2) + "%", () -> {
+        screen.settingValue(fingerprint, R.string.settings_fingerprint_size, (activity.fingerprintSize() * 2) + "%", () -> {
             LinearLayout controls = screen.column();
             controls.setPadding(activity.dp(24), activity.dp(16), activity.dp(24), activity.dp(8));
             TextView label = screen.text((activity.fingerprintSize() * 2) + "%", 18, 600, screen.foreground);
             controls.addView(label);
             SeekBar slider = new SeekBar(activity);
+            slider.setContentDescription(activity.getString(R.string.settings_fingerprint_size));
             slider.setMax(50);
             slider.setProgress(activity.fingerprintSize() - MIN_SIZE);
             slider.setProgressTintList(android.content.res.ColorStateList.valueOf(screen.accent));
@@ -60,24 +61,24 @@ final class SettingsScreen {
                     }).show();
         });
         LinearLayout data = screen.group(settings, activity.getString(R.string.settings_collection));
-        screen.settingAction(data, activity.getString(R.string.settings_custom_icons), activity.getString(R.string.settings_import_description), () ->
+        screen.settingAction(data, R.string.settings_custom_icons, activity.getString(R.string.settings_import_description), () ->
                 new AlertDialog.Builder(activity).setTitle(activity.getString(R.string.settings_custom_icons))
                         .setItems(new String[]{activity.getString(R.string.settings_import_dark), activity.getString(R.string.settings_import_light), activity.getString(R.string.settings_remove_icons)}, (dialog, which) -> {
                             if (which == 0) activity.pick(MainActivity.REQ_DARK);
                             else if (which == 1) activity.pick(MainActivity.REQ_LIGHT);
                             else activity.clearArtwork(false);
                         }).setNegativeButton(activity.getString(R.string.action_close), null).show());
-        screen.settingAction(data, activity.getString(R.string.settings_reset), null, () ->
+        screen.settingAction(data, R.string.settings_reset, null, () ->
                 new AlertDialog.Builder(activity).setTitle(activity.getString(R.string.settings_reset_title))
                         .setMessage(activity.getString(R.string.settings_reset_description))
                         .setNegativeButton(activity.getString(R.string.action_cancel), null).setPositiveButton(activity.getString(R.string.action_reset), (dialog, which) -> {
                             activity.clearArtwork(true);
                         }).show());
         LinearLayout other = screen.group(settings, activity.getString(R.string.settings_app));
-        screen.settingAction(other, activity.getString(R.string.settings_preview), activity.getString(R.string.settings_preview_description), activity::showPreview);
-        activity.updates.bindStatus(screen.settingValue(other, activity.getString(R.string.settings_updates), activity.getString(R.string.update_checking),
+        screen.settingAction(other, R.string.settings_preview, activity.getString(R.string.settings_preview_description), activity::showPreview);
+        activity.updates.bindStatus(screen.settingValue(other, R.string.settings_updates, activity.getString(R.string.update_checking),
                 () -> activity.updates.check(true)));
-        screen.settingValue(other, activity.getString(R.string.settings_about), BuildConfig.VERSION_NAME, this::showAbout);
+        screen.settingValue(other, R.string.settings_about, BuildConfig.VERSION_NAME, this::showAbout);
         screen.setSettings(settings);
     }
 
@@ -88,9 +89,9 @@ final class SettingsScreen {
         TextView version = activity.catalogScreen.text(BuildConfig.VERSION_NAME, 14, 400, activity.catalogScreen.muted);
         version.setPadding(0, activity.dp(8), 0, activity.dp(16));
         body.addView(version);
-        activity.catalogScreen.settingValue(body, activity.getString(R.string.settings_developer), "Aur\u00e9lio", () ->
+        activity.catalogScreen.settingValue(body, R.string.settings_developer, "Aur\u00e9lio", () ->
                 activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/AurelioMo"))));
-        activity.catalogScreen.settingValue(body, activity.getString(R.string.settings_repository), "AurelioMo/prismlock", () ->
+        activity.catalogScreen.settingValue(body, R.string.settings_repository, "AurelioMo/prismlock", () ->
                 activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/AurelioMo/prismlock"))));
         TextView credit = activity.catalogScreen.text(activity.getString(R.string.settings_about_credit), 13, 400, activity.catalogScreen.muted);
         credit.setPadding(0, activity.dp(16), 0, 0);

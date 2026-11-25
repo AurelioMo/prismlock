@@ -38,15 +38,15 @@ final class CatalogCollection {
         list.setClipToOutline(true);
         list.setOutlineProvider(outline);
         LinearLayout header = screen.column();
-        TextView heading = screen.text(tab == 0 ? "Fingerprints" : "Animations", 32, 700, screen.foreground);
+        TextView heading = screen.text(activity.getString(tab == 0 ? R.string.catalog_fingerprints : R.string.catalog_animations), 32, 700, screen.foreground);
         CatalogScreen.heading(heading);
         heading.setPadding(screen.dp(8), screen.dp(8), screen.dp(8), screen.dp(16));
         header.addView(heading);
-        TextView category = screen.text(tab == 0 ? "Fingerprint collection" : "Touch effects", 13, 600, screen.muted);
+        TextView category = screen.text(activity.getString(tab == 0 ? R.string.catalog_icon_collection : R.string.catalog_touch_effects), 13, 600, screen.muted);
         category.setPadding(screen.dp(12), 0, screen.dp(12), screen.dp(10));
         header.addView(category);
         if (tab == 1) {
-            TextView warning = screen.text("Turn off LockStar's fingerprint effect to avoid conflicts.", 13, 400, screen.muted);
+            TextView warning = screen.text(activity.getString(R.string.catalog_lockstar_warning), 13, 400, screen.muted);
             warning.setPadding(screen.dp(12), 0, screen.dp(12), screen.dp(12));
             header.addView(warning);
         }
@@ -72,7 +72,7 @@ final class CatalogCollection {
                     .setSingleChoiceItems(labels, selected, (dialog, which) -> {
                         adapter.select(family, styles.get(which).tag, (Row) view, list);
                         dialog.dismiss();
-                    }).setNegativeButton("Cancel", null).show();
+                    }).setNegativeButton(R.string.action_cancel, null).show();
         });
         return list;
     }
@@ -94,7 +94,7 @@ final class CatalogCollection {
                 for (String tag : tags) styles.put(tag, Catalog.styles(activity, kind, tag));
             }
             catch (Exception failure) {
-                android.widget.Toast.makeText(activity, "Could not load the collection. Reopen the app to try again.",
+                android.widget.Toast.makeText(activity, activity.getString(R.string.catalog_load_error),
                         android.widget.Toast.LENGTH_LONG).show();
             }
         }
@@ -123,12 +123,12 @@ final class CatalogCollection {
             Row row = recycled instanceof Row ? (Row) recycled : new Row();
             String tag = tags.get(position);
             boolean checked = tag.equals(selectedFamily);
-            String name = tag.isEmpty() ? "Samsung default" : Catalog.title(tag);
+            String name = tag.isEmpty() ? activity.getString(R.string.catalog_samsung_default) : Catalog.title(tag);
             row.label.setText(name);
             List<Catalog.Style> choices = styles.get(tag);
             String detail = "";
             if (choices != null && choices.size() > 1) {
-                detail = choices.size() + " styles";
+                detail = activity.getResources().getQuantityString(R.plurals.catalog_styles, choices.size(), choices.size());
                 if (checked) for (Catalog.Style choice : choices) {
                     if (choice.tag.equals(selectedArtwork)) detail = choice.label;
                 }
@@ -166,6 +166,8 @@ final class CatalogCollection {
             setPadding(screen.dp(16), screen.dp(12), screen.dp(16), screen.dp(12));
             setMinimumHeight(screen.dp(76));
             setForeground(screen.ripple(Color.TRANSPARENT, 0));
+            thumbnail.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+            check.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             thumbnail.setBackground(screen.round(screen.dark ? 0xFF3B4049 : 0xFFE6EBF2, 14));
             thumbnail.setScaleType(ImageView.ScaleType.FIT_CENTER);
             thumbnail.setClipToOutline(true);
