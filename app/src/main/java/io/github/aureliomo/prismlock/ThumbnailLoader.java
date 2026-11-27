@@ -27,9 +27,11 @@ final class ThumbnailLoader {
     private ThumbnailLoader() {}
 
     static void load(Context context, String filename, ImageView target, int pixels) {
-        String key = filename + ":" + pixels;
+        int size = Math.max(1, pixels);
+        String key = filename + ":" + size;
         Bitmap cached = CACHE.get(key);
         if (cached != null) {
+            if (key.equals(target.getTag()) && target.getDrawable() != null) return;
             target.setTag(key);
             target.setImageBitmap(cached);
             return;
@@ -53,8 +55,8 @@ final class ThumbnailLoader {
                 options.inJustDecodeBounds = true;
                 try (InputStream input = app.getAssets().open(filename)) { BitmapFactory.decodeStream(input, null, options); }
                 options.inSampleSize = 1;
-                while (options.outWidth / (options.inSampleSize * 2) >= pixels
-                        && options.outHeight / (options.inSampleSize * 2) >= pixels) options.inSampleSize *= 2;
+                while (options.outWidth / (options.inSampleSize * 2) >= size
+                        && options.outHeight / (options.inSampleSize * 2) >= size) options.inSampleSize *= 2;
                 options.inJustDecodeBounds = false;
                 try (InputStream input = app.getAssets().open(filename)) { bitmap = BitmapFactory.decodeStream(input, null, options); }
                 if (bitmap != null) CACHE.put(key, bitmap);

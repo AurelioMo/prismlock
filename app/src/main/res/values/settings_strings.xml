@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_light">Light</string>
+    <string name="settings_dark">Dark</string>
+    <string name="settings_system">System</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="settings_fingerprint">Fingerprint</string>
+    <string name="settings_customization">Customization</string>
+    <string name="settings_customize_description">Icons and touch effects on your lock screen.</string>
+    <string name="settings_fingerprint_size">Fingerprint size</string>
+    <string name="action_done">Done</string>
+    <string name="settings_collection">Your collection</string>
+    <string name="settings_custom_icons">Custom icons</string>
+    <string name="settings_import_description">Import a PNG image or Lottie file.</string>
+    <string name="settings_import_dark">Import for dark mode / AOD</string>
+    <string name="settings_import_light">Import for light mode</string>
+    <string name="settings_remove_icons">Remove imported icons</string>
+    <string name="settings_reset">Reset customization</string>
+    <string name="settings_reset_title">Restore Samsung defaults?</string>
+    <string name="settings_reset_description">This clears your selected fingerprint, touch effect, and imported icons.</string>
+    <string name="action_reset">Reset</string>
+    <string name="settings_app">App</string>
+    <string name="settings_preview">Preview</string>
+    <string name="settings_preview_description">Your fingerprint and touch effect.</string>
+    <string name="settings_about">About this app</string>
+    <string name="settings_developer">Developer</string>
+    <string name="settings_repository">Repository</string>
+    <string name="settings_about_credit">Original catalog by custombeta. Samsung integration researched with RingPrint.\n\nPrismLock is an independent community project.</string>
+    <string name="settings_clear_error">Could not save the artwork settings.</string>
+</resources>

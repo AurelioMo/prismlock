@@ -26,8 +26,8 @@ final class WallpaperLoader {
 
     static void load(Context context, ImageView target, boolean dark) {
         int resource = dark ? R.drawable.catalog_background_dark : R.drawable.catalog_background_light;
-        int width = context.getResources().getDisplayMetrics().widthPixels;
-        int height = context.getResources().getDisplayMetrics().heightPixels;
+        int width = Math.max(1, context.getResources().getDisplayMetrics().widthPixels);
+        int height = Math.max(1, context.getResources().getDisplayMetrics().heightPixels);
         String key = resource + ":" + width + ":" + height;
         target.setTag(key);
         CachedImage ready = cached;
@@ -51,7 +51,10 @@ final class WallpaperLoader {
             Bitmap result = current.bitmap;
             MAIN.post(() -> {
                 ImageView view = reference.get();
-                if (view != null && key.equals(view.getTag())) view.setImageBitmap(result);
+                if (view != null && key.equals(view.getTag())) {
+                    view.setImageBitmap(result);
+                    view.setBackground(null);
+                }
             });
         });
     }

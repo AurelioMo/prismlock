@@ -33,6 +33,58 @@ public class ArtworkTest {
         }
     }
 
+    @Test public void clearingImportedArtworkPreservesSelectionUnlessResetWasRequested() throws Exception {
+        Context app = RuntimeEnvironment.getApplication();
+        var preferences = app.getSharedPreferences(MainActivity.PREFS, 0);
+        preferences.edit().clear().putString("icon", "oxygenos").putString("animation", "dew")
+                .putString("dark_kind", "png").putInt("size", 80).putLong("ver", Long.MAX_VALUE - 10).commit();
+        var imported = new java.io.File(app.getFilesDir(), "custom_dark.png");
+        java.nio.file.Files.write(imported.toPath(), new byte[]{1});
+
+        awaitClear(app, false);
+        assertFalse(imported.exists());
+        assertEquals("", preferences.getString("dark_kind", null));
+        assertEquals("oxygenos", preferences.getString("icon", null));
+        assertEquals("dew", preferences.getString("animation", null));
+        assertEquals(80, preferences.getInt("size", 0));
+        assertEquals(Long.MAX_VALUE - 9, preferences.getLong("ver", 0));
+
+        awaitClear(app, true);
+        assertEquals("", preferences.getString("icon", null));
+        assertEquals("", preferences.getString("animation", null));
+        assertEquals(Icons.DEF_SIZE, preferences.getInt("size", 0));
+        assertEquals(Long.MAX_VALUE - 8, preferences.getLong("ver", 0));
+    }
+
+    private static void awaitClear(Context app, boolean reset) throws InterruptedException {
+        var completed = new java.util.concurrent.atomic.AtomicBoolean();
+        var error = new java.util.concurrent.atomic.AtomicReference<String>();
+        ArtworkImports.clear(app, reset, message -> {
+            error.set(message);
+            completed.set(true);
+        });
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(30);
+        var main = org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper());
+        while (!completed.get() && System.nanoTime() < deadline) {
+            main.idle();
+            Thread.sleep(10);
+        }
+        main.idle();
+        assertTrue("The artwork change did not finish", completed.get());
+        assertNull(error.get());
+    }
+
+    static void awaitCatalogRows(android.widget.ListView list, int expected) throws InterruptedException {
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(30);
+        var main = org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper());
+        while (list.getAdapter().getCount() != expected && System.nanoTime() < deadline) {
+            main.idle();
+            Thread.sleep(10);
+        }
+        main.idle();
+        assertEquals(expected, list.getAdapter().getCount());
+    }
+
     private static android.view.View findDescription(android.view.View view, String name) {
         if (name.contentEquals(view.getContentDescription() == null ? "" : view.getContentDescription())) return view;
         if (view instanceof android.view.ViewGroup) {
@@ -52,7 +104,7 @@ public class ArtworkTest {
             var field = CatalogScreen.class.getDeclaredField("collections"); field.setAccessible(true);
             android.widget.ListView[] lists = (android.widget.ListView[]) field.get(activity.catalogScreen);
             android.widget.ListView icons = lists[0];
-            assertEquals(Catalog.tags(activity, "icons").size() + 2, icons.getAdapter().getCount());
+            awaitCatalogRows(icons, Catalog.tags(activity, "icons").size() + 2);
             android.widget.ListAdapter adapter = icons.getAdapter();
             android.view.View row = adapter.getView(1, null, icons);
             android.view.View recycled = adapter.getView(2, row, icons);

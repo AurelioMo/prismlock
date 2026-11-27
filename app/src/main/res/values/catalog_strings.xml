@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="catalog_fingerprints">Fingerprints</string>
+    <string name="catalog_animations">Animations</string>
+    <string name="catalog_settings">Settings</string>
+    <string name="catalog_import">Import fingerprint</string>
+    <string name="catalog_reload">Reload collection</string>
+    <string name="catalog_icon_collection">Fingerprint collection</string>
+    <string name="catalog_touch_effects">Touch effects</string>
+    <string name="catalog_lockstar_warning">Turn off LockStar\'s fingerprint effect to avoid conflicts.</string>
+    <string name="catalog_load_error">Could not load the collection. Reopen the app to try again.</string>
+    <string name="catalog_samsung_default">Samsung default</string>
+    <plurals name="catalog_styles">
+        <item quantity="one">%d style</item>
+        <item quantity="other">%d styles</item>
+    </plurals>
+</resources>

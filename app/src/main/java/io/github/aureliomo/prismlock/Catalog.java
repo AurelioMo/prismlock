@@ -34,7 +34,7 @@ final class Catalog {
                 }
             });
 
-    private static CatalogIndex index(Context context) throws Exception {
+    static CatalogIndex index(Context context) throws Exception {
         CatalogIndex current = cachedIndex;
         if (current != null) return current;
         synchronized (Catalog.class) {

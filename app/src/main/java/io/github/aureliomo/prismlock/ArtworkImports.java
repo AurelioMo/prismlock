@@ -1,6 +1,7 @@
 package io.github.aureliomo.prismlock;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -59,9 +60,8 @@ final class ArtworkImports {
                 }
                 File destination = new File(app.getFilesDir(), "custom_" + slot + "." + kind);
                 if (!pending.renameTo(destination)) throw new IllegalStateException("Could not save this icon.");
-                android.content.SharedPreferences prefs = app.getSharedPreferences(MainActivity.PREFS, 0);
-                if (!prefs.edit().putString(slot + "_kind", kind)
-                        .putLong("ver", SettingsStore.nextVersion(prefs)).commit()) {
+                SharedPreferences prefs = app.getSharedPreferences(MainActivity.PREFS, 0);
+                if (!SettingsStore.commitArtworkChange(prefs, editor -> editor.putString(slot + "_kind", kind))) {
                     throw new IllegalStateException("Could not save icon settings.");
                 }
             } catch (Exception exception) {
@@ -71,6 +71,25 @@ final class ArtworkImports {
             }
             String result = error;
             MAIN.post(() -> callback.complete(result));
+        });
+    }
+
+    static void clear(Context context, boolean resetSelection, Callback callback) {
+        Context app = context.getApplicationContext();
+        WORKER.execute(() -> {
+            SharedPreferences prefs = app.getSharedPreferences(MainActivity.PREFS, 0);
+            boolean saved = SettingsStore.commitArtworkChange(prefs, editor -> {
+                editor.putString("dark_kind", "").putString("light_kind", "");
+                if (resetSelection) {
+                    editor.putInt("size", Icons.DEF_SIZE).putString("icon", "").putString("animation", "");
+                }
+            });
+            if (saved) {
+                for (String name : new String[]{"dark.png", "dark.json", "light.png", "light.json"}) {
+                    new File(app.getFilesDir(), "custom_" + name).delete();
+                }
+            }
+            MAIN.post(() -> callback.complete(saved ? null : app.getString(R.string.settings_clear_error)));
         });
     }
 

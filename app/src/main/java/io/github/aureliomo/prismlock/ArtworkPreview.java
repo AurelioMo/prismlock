@@ -12,17 +12,11 @@ import org.json.JSONObject;
 import java.io.File;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 final class ArtworkPreview extends View {
-    private static final ThreadPoolExecutor LOADER = new ThreadPoolExecutor(1, 1,
-            30, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), task -> {
-                Thread thread = new Thread(task, "prismlock-preview");
-                thread.setDaemon(true);
-                return thread;
-            });
-    static { LOADER.allowCoreThreadTimeOut(true); }
+    private static final int MAX_RETAINED_BYTES = 12 * 1024 * 1024;
+    private static final ThreadPoolExecutor LOADER = AppWorkers.serial("prismlock-preview");
+    private static final android.os.Handler MAIN = new android.os.Handler(android.os.Looper.getMainLooper());
     private Future<?> loading;
     private volatile long generation;
     private long started;
@@ -57,25 +51,17 @@ final class ArtworkPreview extends View {
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(activity.dp(13));
         textPaint.setTypeface(activity.catalogScreen.bodyTypeface());
+        boolean lightTheme = !Appearance.isDark(activity);
         String tag = activity.preferences().getBoolean("enabled", true)
                 ? activity.preferences().getString("icons".equals(category) ? "icon" : "animation", "") : "";
-        if (!tag.isEmpty()) {
-            try { tag = Catalog.resolve(activity, category, tag); }
-            catch (Exception ignored) { }
-        }
         String slot = importSlot();
-        String file = tag.isEmpty() ? "" : category + "_" + tag + ".json";
-        if (!tag.isEmpty() && "icons".equals(category)) {
-            try {
-                boolean lightTheme = !Appearance.isDark(activity);
-                file = category + "_" + Catalog.iconTag(activity, tag, lightTheme ? "light" : "dark") + ".json";
-            } catch (Exception exception) {
-                file = category + "_" + tag + ".json";
-            }
+        String importKind = slot.isEmpty() ? "" : activity.importKind(slot);
+        String identity = slot.isEmpty() ? tag : slot + ":" + importKind + ":" + activity.preferences().getLong("ver", 0);
+        if (identity.equals(requested)) {
+            if (images != null) sizeToImages(images);
+            invalidate();
+            return;
         }
-        final String previewFile = file;
-        String identity = slot.isEmpty() ? file : slot + ":" + activity.importKind(slot) + ":" + activity.preferences().getLong("ver", 0);
-        if (identity.equals(requested)) { invalidate(); return; }
         requested = identity;
         final long request = ++generation;
         cancelLoading();
@@ -87,7 +73,7 @@ final class ArtworkPreview extends View {
             try {
                 PreviewImages next;
                 if (!slot.isEmpty()) {
-                    if (!"png".equals(activity.importKind(slot))) {
+                    if (!"png".equals(importKind)) {
                         if (request == generation && identity.equals(requested)) {
                             status = "Imported Lottie - preview unavailable";
                             postInvalidate();
@@ -100,7 +86,10 @@ final class ArtworkPreview extends View {
                     next = new PreviewImages(decoded, new double[]{-bitmap.getWidth() / 2.0,
                             -bitmap.getHeight() / 2.0, bitmap.getWidth() / 2.0, bitmap.getHeight() / 2.0}, 30);
                 } else {
-                    JSONObject document = new JSONObject(Catalog.read(activity, previewFile));
+                    String resolved = "icons".equals(category)
+                            ? Catalog.iconTag(activity, tag, lightTheme ? "light" : "dark")
+                            : Catalog.resolve(activity, category, tag);
+                    JSONObject document = new JSONObject(Catalog.read(activity, category + "_" + resolved + ".json"));
                     org.json.JSONArray assets = document.getJSONArray("assets");
                     org.json.JSONArray bounds = document.getJSONArray("catalogBounds");
                     Bitmap[] frames = new Bitmap[assets.length()];
@@ -123,25 +112,14 @@ final class ArtworkPreview extends View {
                     }
                 }
                 PreviewImages ready = next;
-                post(() -> {
+                MAIN.post(() -> {
                     if (request != generation || !identity.equals(requested) || !isAttachedToWindow()) {
                         recycleUnpublished(ready.frames);
                         return;
                     }
                     started = SystemClock.uptimeMillis();
                     images = ready;
-                    double scale = CatalogScale.percent(category, activity.fingerprintSize(),
-                            ready.bounds[2] - ready.bounds[0], ready.bounds[3] - ready.bounds[1]) / 100;
-                    double extent = 288;
-                    for (Bitmap bitmap : ready.frames) {
-                        extent = Math.max(extent, Math.max(bitmap.getWidth() + Math.abs(ready.bounds[0] + ready.bounds[2]),
-                                bitmap.getHeight() + Math.abs(ready.bounds[1] + ready.bounds[3])) * scale);
-                    }
-                    android.view.ViewGroup.LayoutParams layout = getLayoutParams();
-                    if (layout != null) {
-                        layout.height = activity.dp((int) Math.ceil(132 * extent / 288));
-                        setLayoutParams(layout);
-                    }
+                    sizeToImages(ready);
                     status = "";
                     invalidate();
                 });
@@ -152,14 +130,35 @@ final class ArtworkPreview extends View {
         });
     }
 
+    private void sizeToImages(PreviewImages ready) {
+        double scale = CatalogScale.percent(category, activity.fingerprintSize(),
+                ready.bounds[2] - ready.bounds[0], ready.bounds[3] - ready.bounds[1]) / 100;
+        double extent = 288;
+        for (Bitmap bitmap : ready.frames) {
+            extent = Math.max(extent, Math.max(bitmap.getWidth() + Math.abs(ready.bounds[0] + ready.bounds[2]),
+                    bitmap.getHeight() + Math.abs(ready.bounds[1] + ready.bounds[3])) * scale);
+        }
+        android.view.ViewGroup.LayoutParams layout = getLayoutParams();
+        if (layout != null) {
+            int height = activity.dp((int) Math.ceil(132 * extent / 288));
+            if (layout.height != height) {
+                layout.height = height;
+                setLayoutParams(layout);
+            }
+        }
+    }
+
     private static void recycleUnpublished(Bitmap[] frames) {
         if (frames == null) return;
         for (Bitmap frame : frames) if (frame != null && !frame.isRecycled()) frame.recycle();
     }
 
     private void cancelLoading() {
-        if (loading != null) loading.cancel(true);
-        LOADER.purge();
+        if (loading != null) {
+            loading.cancel(true);
+            loading = null;
+            LOADER.purge();
+        }
     }
 
     @Override protected void onWindowVisibilityChanged(int visibility) {
@@ -169,15 +168,18 @@ final class ArtworkPreview extends View {
 
     @Override protected void onAttachedToWindow() {
         super.onAttachedToWindow();
+        started = SystemClock.uptimeMillis();
         loadCatalog();
     }
 
     @Override protected void onDetachedFromWindow() {
         ++generation;
         cancelLoading();
-        requested = "";
-        images = null;
-        status = "";
+        if (images == null || images.bytes > MAX_RETAINED_BYTES) {
+            requested = "";
+            images = null;
+            status = "";
+        }
         super.onDetachedFromWindow();
     }
 
@@ -229,9 +231,13 @@ final class ArtworkPreview extends View {
         final double[] bounds;
         final double fps;
         final int[] opacity;
+        final long bytes;
 
         PreviewImages(Bitmap[] frames, double[] bounds, double fps) {
             this.frames = frames;
+            long size = 0;
+            for (Bitmap frame : frames) size += frame.getAllocationByteCount();
+            bytes = size;
             this.bounds = bounds;
             this.fps = fps;
             this.opacity = new int[frames.length];

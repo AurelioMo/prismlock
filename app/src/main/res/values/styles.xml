@@ -14,4 +14,8 @@
     <style name="SamsungCatalogDarkTheme" parent="android:style/Theme.DeviceDefault.NoActionBar">
         <item name="android:colorAccent">#A8C8FF</item>
     </style>
+    <style name="PrismLockPreviewMotion">
+        <item name="android:windowEnterAnimation">@anim/preview_enter</item>
+        <item name="android:windowExitAnimation">@anim/preview_exit</item>
+    </style>
 </resources>

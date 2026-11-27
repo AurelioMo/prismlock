@@ -3,35 +3,25 @@ package io.github.aureliomo.prismlock;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
-import android.content.pm.Signature;
-import android.content.pm.SigningInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.security.MessageDigest;
-import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /** Downloads, verifies and installs a release APK. */
 final class UpdateInstaller {
-    private static final long MAX_APK_BYTES = 200L * 1024L * 1024L;
     private static final String PENDING_APK = "pending_update_apk";
     private static final String WAITING_PERMISSION = "update_waiting_permission";
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
@@ -70,9 +60,9 @@ final class UpdateInstaller {
         Context app = context.getApplicationContext();
         EXECUTOR.execute(() -> {
             try {
-                File apk = download(app, release, callback);
+                File apk = UpdateDownload.download(app, release, percent -> postProgress(callback, percent));
                 postStatus(callback, "Verifying update\u2026");
-                verify(app, apk);
+                UpdateApkVerifier.verify(app, apk);
                 postStatus(callback, "Installing " + release.version + "\u2026");
                 RootResult root = installWithRoot(app, apk);
                 if (root == RootResult.SUCCESS) {
@@ -93,102 +83,6 @@ final class UpdateInstaller {
                 postFinished(callback, new Result(false, message(throwable)));
             }
         });
-    }
-
-    private static File download(Context context, UpdateChecker.Release release, Callback callback)
-            throws Exception {
-        File directory = new File(context.getCacheDir(), "updates");
-        if (!directory.exists() && !directory.mkdirs()) {
-            throw new IOException("Could not create the update directory.");
-        }
-        long expected = release.size;
-        if (expected > 0 && directory.getUsableSpace() < expected * 2) {
-            throw new IOException("Not enough free storage for this update.");
-        }
-
-        File target = new File(directory, "prismlock-" + safe(release.version) + ".apk");
-        File temporary = new File(directory, target.getName() + ".part");
-        delete(temporary);
-        HttpURLConnection connection = (HttpURLConnection)
-                new URL(release.apkUrl).openConnection();
-        connection.setConnectTimeout(15_000);
-        connection.setReadTimeout(30_000);
-        connection.setInstanceFollowRedirects(true);
-        connection.setRequestProperty("Accept", "application/octet-stream");
-        connection.setRequestProperty("User-Agent", "PrismLock/" + BuildConfig.VERSION_NAME);
-        long total = 0L;
-        long completed = 0L;
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        try {
-            int status = connection.getResponseCode();
-            if (status != HttpURLConnection.HTTP_OK) {
-                throw new IOException("GitHub returned HTTP " + status + " for the update.");
-            }
-            total = connection.getContentLengthLong();
-            if (total <= 0) total = release.size;
-            if (total > MAX_APK_BYTES) throw new IOException("The update file is too large.");
-            try (InputStream input = new BufferedInputStream(connection.getInputStream());
-                    FileOutputStream output = new FileOutputStream(temporary)) {
-                byte[] buffer = new byte[64 * 1024];
-                int count;
-                int lastPercent = -1;
-                while ((count = input.read(buffer)) != -1) {
-                    output.write(buffer, 0, count);
-                    digest.update(buffer, 0, count);
-                    completed += count;
-                    if (completed > MAX_APK_BYTES) {
-                        throw new IOException("The update file is too large.");
-                    }
-                    if (total > 0) {
-                        int percent = (int) Math.min(100L, completed * 100L / total);
-                        if (percent != lastPercent) {
-                            lastPercent = percent;
-                            postProgress(callback, percent);
-                        }
-                    }
-                }
-                output.getFD().sync();
-            }
-        } finally {
-            connection.disconnect();
-        }
-        if (total > 0 && completed != total) {
-            delete(temporary);
-            throw new IOException("The update download was incomplete.");
-        }
-        String sha256 = hex(digest.digest());
-        if (release.sha256 != null && !release.sha256.isEmpty()
-                && !release.sha256.equalsIgnoreCase(sha256)) {
-            delete(temporary);
-            throw new IOException("The update failed SHA-256 verification.");
-        }
-        delete(target);
-        if (!temporary.renameTo(target)) {
-            delete(temporary);
-            throw new IOException("Could not finish writing the update file.");
-        }
-        return target;
-    }
-
-    private static void verify(Context context, File apk) throws Exception {
-        PackageManager manager = context.getPackageManager();
-        int flags = Build.VERSION.SDK_INT >= 28
-                ? Api28.SIGNING_FLAG
-                : PackageManager.GET_SIGNATURES;
-        PackageInfo archive = manager.getPackageArchiveInfo(apk.getAbsolutePath(), flags);
-        if (archive == null) throw new IOException("The downloaded file is not a valid APK.");
-        if (!context.getPackageName().equals(archive.packageName)) {
-            throw new IOException("The downloaded APK belongs to another package.");
-        }
-        PackageInfo installed = manager.getPackageInfo(context.getPackageName(), flags);
-        String expectedSigner = signer(installed);
-        String actualSigner = signer(archive);
-        if (expectedSigner == null || !expectedSigner.equals(actualSigner)) {
-            throw new IOException("The downloaded APK is not signed by the PrismLock release key.");
-        }
-        if (versionCode(archive) <= versionCode(installed)) {
-            throw new IOException("The downloaded release is not newer than the installed version.");
-        }
     }
 
     private static RootResult installWithRoot(Context context, File apk) {
@@ -268,7 +162,7 @@ final class UpdateInstaller {
 
     static void waitingForPermission(Context context, boolean waiting) {
         context.getSharedPreferences(MainActivity.PREFS, 0).edit()
-                .putBoolean(WAITING_PERMISSION, waiting).commit();
+                .putBoolean(WAITING_PERMISSION, waiting).apply();
     }
 
     static boolean takePermissionResume(Context context) {
@@ -289,7 +183,7 @@ final class UpdateInstaller {
                 }
                 File apk = new File(new File(app.getCacheDir(), "updates"), filename);
                 // Recheck package, version and signer after returning from Settings.
-                verify(app, apk);
+                UpdateApkVerifier.verify(app, apk);
                 installWithSession(app, apk);
                 postFinished(callback, new Result(true, "Follow the system installer to finish updating PrismLock."));
             } catch (UnknownSourcesException exception) {
@@ -298,47 +192,6 @@ final class UpdateInstaller {
                 postFinished(callback, new Result(false, message(throwable)));
             }
         });
-    }
-
-    private static String signer(PackageInfo info) throws Exception {
-        Signature[] signatures = Build.VERSION.SDK_INT >= 28
-                ? Api28.signatures(info)
-                : info.signatures;
-        if (signatures == null || signatures.length == 0) return null;
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        return hex(digest.digest(signatures[0].toByteArray()));
-    }
-
-    private static long versionCode(PackageInfo info) {
-        return Build.VERSION.SDK_INT >= 28 ? Api28.versionCode(info) : info.versionCode;
-    }
-
-    /** Isolates API 28+ types so older devices never load them. */
-    @android.annotation.TargetApi(28)
-    private static final class Api28 {
-        static final int SIGNING_FLAG = PackageManager.GET_SIGNING_CERTIFICATES;
-
-        static Signature[] signatures(PackageInfo info) {
-            SigningInfo signing = info.signingInfo;
-            if (signing == null) return null;
-            return signing.hasMultipleSigners()
-                    ? signing.getApkContentsSigners()
-                    : signing.getSigningCertificateHistory();
-        }
-
-        static long versionCode(PackageInfo info) {
-            return info.getLongVersionCode();
-        }
-    }
-
-    private static String hex(byte[] bytes) {
-        StringBuilder result = new StringBuilder(bytes.length * 2);
-        for (byte value : bytes) result.append(String.format(Locale.ROOT, "%02x", value));
-        return result.toString();
-    }
-
-    private static String safe(String version) {
-        return version == null ? "update" : version.replaceAll("[^a-zA-Z0-9._-]", "_");
     }
 
     private static String quote(String value) {
@@ -357,10 +210,6 @@ final class UpdateInstaller {
         } catch (IOException ignored) {
             // The install result is read from the exit code.
         }
-    }
-
-    private static void delete(File file) {
-        if (file.exists() && !file.delete()) file.deleteOnExit();
     }
 
     private static void postProgress(Callback callback, int percent) {
