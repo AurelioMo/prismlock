@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.0 - 2026-11-27
+
+- Separate settings, catalog lists, update presentation, APK download and verification, and LSPosed configuration loading into focused components. ([PR #6](https://github.com/AurelioMo/prismlock/pull/6))
+- Fix interrupted APK downloads leaving partial files, update dialogs outliving their activity, artwork removal racing imports, and configuration reads mixing settings revisions.
+- Move catalog, settings, and update labels into Android resources. Improve tab focus, label the fingerprint size slider, and honor the system animation setting for selection feedback.
+- Load the catalog index and preview artwork in background workers. Reuse list rows, thumbnails, and eligible preview bitmaps. Replace the thumbnail pulse with eased tab and preview transitions, subtle press feedback, and an animated selection checkmark.
+- Add regression tests for interrupted downloads and for removing imported artwork while preserving catalog selections. Extend catalog tests to cover asynchronous loading.
+
 ## 1.4.8 - 2026-11-25
 
 - Add the HyperOS fingerprint touch effect with six styles ([PR #5](https://github.com/AurelioMo/prismlock/pull/5) by console-ramoops).
