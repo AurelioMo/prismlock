@@ -51,7 +51,10 @@ final class WallpaperLoader {
             Bitmap result = current.bitmap;
             MAIN.post(() -> {
                 ImageView view = reference.get();
-                if (view != null && key.equals(view.getTag())) view.setImageBitmap(result);
+                if (view != null && key.equals(view.getTag())) {
+                    view.setImageBitmap(result);
+                    view.setBackground(null);
+                }
             });
         });
     }

@@ -162,7 +162,7 @@ final class UpdateInstaller {
 
     static void waitingForPermission(Context context, boolean waiting) {
         context.getSharedPreferences(MainActivity.PREFS, 0).edit()
-                .putBoolean(WAITING_PERMISSION, waiting).commit();
+                .putBoolean(WAITING_PERMISSION, waiting).apply();
     }
 
     static boolean takePermissionResume(Context context) {

@@ -35,15 +35,12 @@ final class CatalogScreen {
     final int accent;
     final int panel;
     private final LinearLayout content;
-    private final TextView title;
     private final ScrollView scroll;
     private final FrameLayout pages;
     private final ListView[] collections = new ListView[2];
     private final ImageView importAction;
     private final LinearLayout[] tabs = new LinearLayout[3];
-    private LinearLayout settings;
     private int selectedTab;
-    private int settingsScrollPosition;
 
     CatalogScreen(Activity activity, Runnable importFile, Runnable selectionChanged, int initialTab) {
         this.activity = activity;
@@ -112,7 +109,7 @@ final class CatalogScreen {
         scroll.setVerticalScrollBarEnabled(false);
         LinearLayout document = column();
         document.setPadding(0, 0, 0, dp(16));
-        title = text("", 32, 700, foreground);
+        TextView title = text(activity.getString(R.string.catalog_settings), 32, 700, foreground);
         heading(title);
         title.setPadding(dp(8), dp(8), dp(8), dp(16));
         document.addView(title);
@@ -142,6 +139,7 @@ final class CatalogScreen {
             tab.setContentDescription(labelText);
             tab.setFocusable(true);
             tab.setBackground(ripple(Color.TRANSPARENT, 20));
+            UiMotion.pressFeedback(tab);
             ImageView icon = new ImageView(activity);
             icon.setImageDrawable(symbol(TAB_ICONS[index], muted));
             icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
@@ -153,9 +151,9 @@ final class CatalogScreen {
             tab.addView(label);
             tab.setOnClickListener(view -> {
                 if (selectedTab == destination) return;
-                if (selectedTab == 2) settingsScrollPosition = scroll.getScrollY();
+                int previous = selectedTab;
                 selectedTab = destination;
-                render();
+                render(previous);
             });
             tabs[index] = tab;
             navigation.addView(tab, new LinearLayout.LayoutParams(0, dp(58), 1));
@@ -168,8 +166,8 @@ final class CatalogScreen {
     }
 
     void setSettings(LinearLayout settings) {
-        this.settings = settings;
-        render();
+        content.addView(settings);
+        render(-1);
     }
 
     int currentTab() {
@@ -229,6 +227,7 @@ final class CatalogScreen {
         ImageView chevron = new ImageView(activity);
         chevron.setImageDrawable(symbol("chevron", muted));
         row.addView(chevron, new LinearLayout.LayoutParams(dp(20), dp(20)));
+        UiMotion.pressFeedback(row);
         row.setOnClickListener(view -> action.run());
         parent.addView(row);
     }
@@ -247,6 +246,7 @@ final class CatalogScreen {
         ImageView chevron = new ImageView(activity);
         chevron.setImageDrawable(symbol("chevron", muted));
         row.addView(chevron, new LinearLayout.LayoutParams(dp(18), dp(18)));
+        UiMotion.pressFeedback(row);
         row.setOnClickListener(view -> action.run());
         parent.addView(row);
         return detail;
@@ -290,29 +290,29 @@ final class CatalogScreen {
         parent.addView(row);
     }
 
-    private void render() {
-        content.removeAllViews();
-        title.setText(TAB_LABELS[selectedTab]);
+    private void render(int previous) {
         importAction.setVisibility(selectedTab == 0 ? View.VISIBLE : View.INVISIBLE);
         for (int index = 0; index < tabs.length; index++) {
             boolean selected = index == selectedTab;
+            if (previous >= 0 && index != previous && !selected) continue;
             tabs[index].setSelected(selected);
-            ((ImageView) tabs[index].getChildAt(0)).setImageDrawable(
-                    symbol(TAB_ICONS[index], selected ? foreground : muted));
-            ((TextView) tabs[index].getChildAt(1)).setTextColor(selected ? foreground : muted);
+            int color = selected ? foreground : muted;
+            ((ImageView) tabs[index].getChildAt(0)).getDrawable().setTint(color);
+            ((TextView) tabs[index].getChildAt(1)).setTextColor(color);
             tabs[index].setAlpha(selected ? 1 : 0.7f);
         }
+        if (previous >= 0) UiMotion.reset(previous == 2 ? scroll : collections[previous]);
         scroll.setVisibility(selectedTab == 2 ? View.VISIBLE : View.GONE);
         for (int i = 0; i < collections.length; i++) {
             if (collections[i] != null) collections[i].setVisibility(i == selectedTab ? View.VISIBLE : View.GONE);
         }
-        if (selectedTab == 2) {
-            if (settings.getParent() instanceof ViewGroup) ((ViewGroup) settings.getParent()).removeView(settings);
-            content.addView(settings);
-            scroll.post(() -> scroll.scrollTo(0, settingsScrollPosition));
-        } else if (collections[selectedTab] == null) {
+        if (selectedTab != 2 && collections[selectedTab] == null) {
             collections[selectedTab] = collection.create(selectedTab, scroll.getOutlineProvider());
             pages.addView(collections[selectedTab], new FrameLayout.LayoutParams(-1, -1));
+        }
+        if (previous >= 0) {
+            View page = selectedTab == 2 ? scroll : collections[selectedTab];
+            UiMotion.enterTab(page, Integer.signum(selectedTab - previous), dp(14));
         }
     }
 
@@ -331,6 +331,7 @@ final class CatalogScreen {
         result.setPadding(dp(12), dp(12), dp(12), dp(12));
         result.setContentDescription(label);
         result.setBackground(ripple(Color.TRANSPARENT, 24));
+        UiMotion.pressFeedback(result);
         result.setOnClickListener(view -> action.run());
         return result;
     }
@@ -344,7 +345,7 @@ final class CatalogScreen {
 
     Drawable ripple(int color, int radius) {
         return new RippleDrawable(ColorStateList.valueOf(dark ? 0x22FFFFFF : 0x18000000),
-                round(color, radius), round(Color.WHITE, radius));
+                color == Color.TRANSPARENT ? null : round(color, radius), round(Color.WHITE, radius));
     }
 
     int dp(int value) {

@@ -140,9 +140,9 @@ public class MainActivity extends Activity {
         scroll.addView(body);
         AlertDialog dialog = new AlertDialog.Builder(this).setView(scroll)
                 .setPositiveButton("Close", null).create();
-        dialog.show();
         dialog.getWindow().setBackgroundDrawable(catalogScreen.dialogBackground());
-        refresh();
+        dialog.getWindow().setWindowAnimations(R.style.PrismLockPreviewMotion);
+        dialog.show();
     }
 
     private void addPreviewCard(LinearLayout parent, String heading, String key, ArtworkPreview view) {

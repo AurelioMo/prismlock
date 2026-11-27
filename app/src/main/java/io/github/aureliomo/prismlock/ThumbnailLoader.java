@@ -31,6 +31,7 @@ final class ThumbnailLoader {
         String key = filename + ":" + size;
         Bitmap cached = CACHE.get(key);
         if (cached != null) {
+            if (key.equals(target.getTag()) && target.getDrawable() != null) return;
             target.setTag(key);
             target.setImageBitmap(cached);
             return;

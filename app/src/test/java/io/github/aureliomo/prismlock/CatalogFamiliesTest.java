@@ -75,7 +75,9 @@ public class CatalogFamiliesTest {
         try (var controller = Robolectric.buildActivity(MainActivity.class).setup().visible()) {
             MainActivity activity = controller.get();
             ListView list = collection(activity, 0);
-            int position = Catalog.tags(app, "icons").indexOf("white") + 2;
+            List<String> tags = Catalog.tags(app, "icons");
+            ArtworkTest.awaitCatalogRows(list, tags.size() + 2);
+            int position = tags.indexOf("white") + 2;
             View row = list.getAdapter().getView(position, null, list);
             assertTrue(row.isSelected());
             list.performItemClick(row, position, position);

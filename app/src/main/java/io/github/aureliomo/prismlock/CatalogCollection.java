@@ -1,6 +1,8 @@
 package io.github.aureliomo.prismlock;
 
 import android.app.Activity;
+import android.os.Handler;
+import android.os.Looper;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
@@ -14,17 +16,46 @@ import android.widget.TextView;
 import android.widget.ListView;
 import android.widget.BaseAdapter;
 import java.util.ArrayList;
+import java.util.concurrent.Executor;
 import java.util.List;
 
 final class CatalogCollection {
+    private static final Executor LOADER = AppWorkers.serial("prismlock-catalog");
+    private static final Handler MAIN = new Handler(Looper.getMainLooper());
+
     private final Activity activity;
     private final CatalogScreen screen;
     private final Runnable selectionChanged;
+    private final CatalogAdapter[] adapters = new CatalogAdapter[2];
+    private CatalogIndex index;
+    private boolean loadFailed;
 
     CatalogCollection(Activity activity, CatalogScreen screen, Runnable selectionChanged) {
         this.activity = activity;
         this.screen = screen;
         this.selectionChanged = selectionChanged;
+        android.content.Context app = activity.getApplicationContext();
+        LOADER.execute(() -> {
+            CatalogIndex loaded;
+            try {
+                loaded = Catalog.index(app);
+            } catch (Exception failure) {
+                MAIN.post(() -> {
+                    loadFailed = true;
+                    if (!activity.isDestroyed() && !activity.isFinishing()) reportLoadFailure();
+                });
+                return;
+            }
+            MAIN.post(() -> {
+                if (activity.isDestroyed() || activity.isFinishing()) return;
+                index = loaded;
+                for (CatalogAdapter adapter : adapters) if (adapter != null) adapter.populate(loaded);
+            });
+        });
+    }
+
+    private void reportLoadFailure() {
+        android.widget.Toast.makeText(activity, R.string.catalog_load_error, android.widget.Toast.LENGTH_LONG).show();
     }
 
     ListView create(int tab, ViewOutlineProvider outline) {
@@ -52,14 +83,17 @@ final class CatalogCollection {
         }
         list.addHeaderView(header, null, false);
         CatalogAdapter adapter = new CatalogAdapter(tab);
+        adapters[tab] = adapter;
+        if (index != null) adapter.populate(index);
+        else if (loadFailed) reportLoadFailure();
         list.setAdapter(adapter);
         list.setOnItemClickListener((parent, view, position, id) -> {
             int index = position - list.getHeaderViewsCount();
             if (index < 0 || index >= adapter.getCount()) return;
             String family = adapter.tags.get(index);
-            List<Catalog.Style> styles = adapter.styles.get(family);
+            List<Catalog.Style> styles = adapter.styles.get(index);
             if (styles == null || styles.size() < 2) {
-                adapter.select(family, family, (Row) view, list);
+                adapter.select(family, family, list);
                 return;
             }
             String[] labels = new String[styles.size()];
@@ -70,7 +104,7 @@ final class CatalogCollection {
             }
             new android.app.AlertDialog.Builder(activity).setTitle(Catalog.title(family))
                     .setSingleChoiceItems(labels, selected, (dialog, which) -> {
-                        adapter.select(family, styles.get(which).tag, (Row) view, list);
+                        adapter.select(family, styles.get(which).tag, list);
                         dialog.dismiss();
                     }).setNegativeButton(R.string.action_cancel, null).show();
         });
@@ -81,24 +115,31 @@ final class CatalogCollection {
         final List<String> tags = new ArrayList<>();
         final String kind, key;
         String selectedFamily, selectedArtwork;
-        final java.util.Map<String, List<Catalog.Style>> styles = new java.util.HashMap<>();
+        final List<String> names = new ArrayList<>();
+        final List<List<Catalog.Style>> styles = new ArrayList<>();
+
         CatalogAdapter(int tab) {
             kind = tab == 0 ? "icons" : "animations";
             key = tab == 0 ? "icon" : "animation";
-            String selected = activity.getSharedPreferences(MainActivity.PREFS, 0).getString(key, "");
-            tags.add("");
-            try {
-                tags.addAll(Catalog.tags(activity, kind));
-                selectedFamily = Catalog.family(activity, kind, selected);
-                selectedArtwork = Catalog.resolve(activity, kind, selected);
-                for (String tag : tags) styles.put(tag, Catalog.styles(activity, kind, tag));
-            }
-            catch (Exception failure) {
-                android.widget.Toast.makeText(activity, activity.getString(R.string.catalog_load_error),
-                        android.widget.Toast.LENGTH_LONG).show();
-            }
+            addRow("", java.util.Collections.emptyList());
+            selectedArtwork = activity.getSharedPreferences(MainActivity.PREFS, 0).getString(key, "");
+            selectedFamily = selectedArtwork;
         }
-        void select(String family, String tag, Row row, ListView list) {
+
+        void populate(CatalogIndex index) {
+            selectedFamily = index.family(kind, selectedArtwork);
+            selectedArtwork = index.resolve(kind, selectedArtwork);
+            for (String tag : index.tags(kind)) addRow(tag, index.styles(kind, tag));
+            notifyDataSetChanged();
+        }
+
+        private void addRow(String tag, List<Catalog.Style> choices) {
+            tags.add(tag);
+            names.add(tag.isEmpty() ? activity.getString(R.string.catalog_samsung_default) : Catalog.title(tag));
+            styles.add(choices);
+        }
+
+        void select(String family, String tag, ListView list) {
             String previousFamily = selectedFamily;
             SettingsStore.select(activity.getSharedPreferences(MainActivity.PREFS, 0), key, tag);
             selectedArtwork = tag;
@@ -109,10 +150,12 @@ final class CatalogCollection {
                 String visibleTag = tags.get(position);
                 View visible = list.getChildAt(child);
                 if (visible instanceof Row && (visibleTag.equals(previousFamily) || visibleTag.equals(family))) {
-                    getView(position, visible, list);
+                    bind(position, (Row) visible);
+                    if (visibleTag.equals(family) && !family.equals(previousFamily)) {
+                        UiMotion.confirmSelection(((Row) visible).check);
+                    }
                 }
             }
-            UiMotion.settle(row.thumbnail);
             selectionChanged.run();
         }
         @Override public int getCount() { return tags.size(); }
@@ -121,11 +164,16 @@ final class CatalogCollection {
         @Override public boolean hasStableIds() { return true; }
         @Override public View getView(int position, View recycled, ViewGroup parent) {
             Row row = recycled instanceof Row ? (Row) recycled : new Row();
+            bind(position, row);
+            return row;
+        }
+
+        private void bind(int position, Row row) {
             String tag = tags.get(position);
             boolean checked = tag.equals(selectedFamily);
-            String name = tag.isEmpty() ? activity.getString(R.string.catalog_samsung_default) : Catalog.title(tag);
+            String name = names.get(position);
             row.label.setText(name);
-            List<Catalog.Style> choices = styles.get(tag);
+            List<Catalog.Style> choices = styles.get(position);
             String detail = "";
             if (choices != null && choices.size() > 1) {
                 detail = activity.getResources().getQuantityString(R.plurals.catalog_styles, choices.size(), choices.size());
@@ -135,14 +183,11 @@ final class CatalogCollection {
             }
             row.detail.setText(detail);
             row.detail.setVisibility(detail.isEmpty() ? View.INVISIBLE : View.VISIBLE);
+            UiMotion.reset(row.check);
             row.check.setVisibility(checked ? View.VISIBLE : View.INVISIBLE);
             row.setSelected(checked);
             row.setContentDescription(name + (detail.isEmpty() ? "" : ", " + detail) + (checked ? ", selected" : ""));
-            float top = position == 0 ? screen.dp(24) : 0, bottom = position == getCount() - 1 ? screen.dp(24) : 0;
-            GradientDrawable background = new GradientDrawable();
-            background.setColor(screen.panel);
-            background.setCornerRadii(new float[]{top, top, top, top, bottom, bottom, bottom, bottom});
-            row.setBackground(background);
+            row.setCorners(position == 0, position == getCount() - 1);
             if (tag.isEmpty()) {
                 row.thumbnail.setTag(null);
                 row.thumbnail.setImageDrawable(screen.symbol("icons".equals(kind) ? "fingerprint" : "animation", screen.foreground));
@@ -151,7 +196,6 @@ final class CatalogCollection {
                 row.thumbnail.setPadding(screen.dp(4), screen.dp(4), screen.dp(4), screen.dp(4));
                 ThumbnailLoader.load(activity, "previews/" + kind + "_" + (checked ? selectedArtwork : tag) + ".png", row.thumbnail, screen.dp(36));
             }
-            return row;
         }
     }
 
@@ -160,12 +204,26 @@ final class CatalogCollection {
         final TextView label = screen.text("", 16, 600, screen.foreground);
         final TextView detail = screen.text("", 13, 400, screen.muted);
         final ImageView check = new ImageView(activity);
+        final GradientDrawable background = new GradientDrawable();
+        int corners = -1;
+
+        void setCorners(boolean first, boolean last) {
+            int shape = (first ? 1 : 0) | (last ? 2 : 0);
+            if (shape == corners) return;
+            corners = shape;
+            float top = first ? screen.dp(24) : 0;
+            float bottom = last ? screen.dp(24) : 0;
+            background.setCornerRadii(new float[]{top, top, top, top, bottom, bottom, bottom, bottom});
+        }
+
         Row() {
             super(activity);
             setGravity(Gravity.CENTER_VERTICAL);
             setPadding(screen.dp(16), screen.dp(12), screen.dp(16), screen.dp(12));
             setMinimumHeight(screen.dp(76));
             setForeground(screen.ripple(Color.TRANSPARENT, 0));
+            background.setColor(screen.panel);
+            setBackground(background);
             thumbnail.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             check.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             thumbnail.setBackground(screen.round(screen.dark ? 0xFF3B4049 : 0xFFE6EBF2, 14));

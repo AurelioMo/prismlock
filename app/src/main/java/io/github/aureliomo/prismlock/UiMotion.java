@@ -25,17 +25,33 @@ final class UiMotion {
         activity.getWindow().setAttributes(attributes);
     }
 
-    static void settle(View view) {
+    static void reset(View view) {
         view.animate().cancel();
-        if (!ValueAnimator.areAnimatorsEnabled()) {
-            view.setAlpha(1);
-            view.setScaleX(1);
-            view.setScaleY(1);
-            return;
-        }
-        view.setAlpha(0.75f);
-        view.setScaleX(0.96f);
-        view.setScaleY(0.96f);
-        view.animate().alpha(1).scaleX(1).scaleY(1).setDuration(180).setInterpolator(EASE).start();
+        view.setAlpha(1);
+        view.setScaleX(1);
+        view.setScaleY(1);
+        view.setTranslationX(0);
+    }
+
+    static void enterTab(View view, int direction, int offset) {
+        reset(view);
+        if (!ValueAnimator.areAnimatorsEnabled()) return;
+        int layoutDirection = view.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL ? -1 : 1;
+        view.setTranslationX(direction * offset * layoutDirection);
+        view.setAlpha(0.72f);
+        view.animate().translationX(0).alpha(1).setDuration(240).setInterpolator(EASE).start();
+    }
+
+    static void confirmSelection(View check) {
+        if (!ValueAnimator.areAnimatorsEnabled()) return;
+        check.setAlpha(0);
+        check.setScaleX(0.88f);
+        check.setScaleY(0.88f);
+        check.animate().alpha(1).scaleX(1).scaleY(1).setDuration(220).setInterpolator(EASE).start();
+    }
+
+    static void pressFeedback(View view) {
+        view.setStateListAnimator(android.animation.AnimatorInflater.loadStateListAnimator(
+                view.getContext(), R.animator.ui_press_scale));
     }
 }
